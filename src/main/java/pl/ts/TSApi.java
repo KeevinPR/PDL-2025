@@ -28,6 +28,16 @@ public class TSApi {
         return simbolo.handle;
     }
     
+    // Establecer atributo en un símbolo
+    public static void setAtributo(SymbolTableManager.Symbol simbolo, String nombre, Object valor) {
+        manager.setAtributo(simbolo, nombre, valor);
+    }
+    
+    // Buscar símbolo
+    public static SymbolTableManager.Symbol buscar(String lexema) {
+        return manager.buscarAqui(lexema);
+    }
+    
     // Entrar a nuevo ámbito
     public static void enterScope(String nombre) {
         manager.enterScope(nombre);

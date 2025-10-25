@@ -13,15 +13,13 @@ public class SymbolTableManager {
         public String lexema;
         public int handle;
         public String tipo;
-        public int lineaPrimera;
-        public int nOcurrencias;
+        public Map<String, Object> atributos;
         
-        public Symbol(String lexema, int handle, int linea) {
+        public Symbol(String lexema, int handle) {
             this.lexema = lexema;
             this.handle = handle;
             this.tipo = "-";
-            this.lineaPrimera = linea;
-            this.nOcurrencias = 1;
+            this.atributos = new LinkedHashMap<>();
         }
     }
     
@@ -78,24 +76,26 @@ public class SymbolTableManager {
         return null;
     }
     
-    public Symbol insertar(String lexema, int linea) {
+    public Symbol insertar(String lexema) {
         if (tablas.isEmpty()) {
             return null;
         }
         SymbolTable tablaActual = tablas.get(tablas.size() - 1);
-        Symbol simbolo = new Symbol(lexema, tablaActual.nextHandle++, linea);
+        Symbol simbolo = new Symbol(lexema, tablaActual.nextHandle++);
         tablaActual.simbolos.add(simbolo);
         return simbolo;
     }
     
     public Symbol asegurar(String lexema, int linea) {
         Symbol simbolo = buscarAqui(lexema);
-        if (simbolo != null) {
-            simbolo.nOcurrencias++;
-            return simbolo;
-        } else {
-            return insertar(lexema, linea);
+        if (simbolo == null) {
+            simbolo = insertar(lexema);
         }
+        return simbolo;
+    }
+    
+    public void setAtributo(Symbol simbolo, String nombre, Object valor) {
+        simbolo.atributos.put(nombre, valor);
     }
     
     public void cerrarTodo() {
@@ -111,11 +111,19 @@ public class SymbolTableManager {
         for (Symbol simbolo : tabla.simbolos) {
             writer.println("* '" + simbolo.lexema + "'");
             writer.println("+ Tipo : '" + simbolo.tipo + "'");
-            writer.println("+ lineaPrimera : " + simbolo.lineaPrimera);
-            writer.println("+ nOcurrencias : " + simbolo.nOcurrencias);
+            
+            for (Map.Entry<String, Object> entrada : simbolo.atributos.entrySet()) {
+                String nombre = entrada.getKey();
+                Object valor = entrada.getValue();
+                
+                writer.print("+ " + nombre + " : ");
+                if (valor instanceof String) {
+                    writer.println("'" + valor + "'");
+                } else {
+                    writer.println(valor);
+                }
+            }
             writer.println();
         }
-        
-        writer.println();
     }
 }

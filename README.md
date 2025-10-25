@@ -48,26 +48,25 @@ int handle2 = TSApi.ensureId("miVariable", 7);
 // handle2 = 1 (mismo identificador, mismo handle)
 ```
 
-## Ejemplo de salida
+## Formato de salida
 
-Si tienes este código:
-```javascript
-let variable1 = 42;
-let variable2 = "hola";
-```
-
-La tabla de símbolos se guarda así:
 ```
 TABLA PRINCIPAL # 1 :
 * 'variable1'
 + Tipo : '-'
-+ lineaPrimera : 1
-+ nOcurrencias : 1
 
 * 'variable2'
 + Tipo : '-'
-+ lineaPrimera : 2
-+ nOcurrencias : 1
+```
+
+## Atributos
+
+Atributos estándar: Tipo, Despl, numParam, TipoParamXX, ModoParamXX, TipoRetorno, EtiqFuncion, Param
+
+```java
+Symbol s = TSApi.buscar("variable1");
+TSApi.setAtributo(s, "Despl", 4);
+TSApi.setAtributo(s, "Tipo", "entero");
 ```
 
 ## Palabras que NO se guardan
