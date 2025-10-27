@@ -69,9 +69,9 @@ TSApi.setAtributo(s, "Despl", 4);
 TSApi.setAtributo(s, "Tipo", "entero");
 ```
 
-## Palabras que NO se guardan
+## Palabras reservadas
 
-function, return, if, for, let, int, float, boolean, string, void, write, read, true, false
+function, return, if, for, int, float, boolean, string, void, write, read
 
 ## Archivos del proyecto
 

@@ -11,8 +11,9 @@ import java.util.*;
 public class Main {
     
     private static final String[] PALABRAS_RESERVADAS = {
-        "function", "return", "if", "for", "let", "int", "float", 
-        "boolean", "string", "void", "write", "read", "true", "false"
+        "function", "return", "if", "for", 
+        "int", "float", "boolean", "string", "void", 
+        "write", "read"
     };
     
     public static void main(String[] args) {
