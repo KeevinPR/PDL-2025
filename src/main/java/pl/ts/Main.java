@@ -4,7 +4,7 @@ public class Main {
 
     public static void main(String[] args) {
         if (args.length != 3) {
-            System.err.println("Uso: java -jar myjs.jar fuente.javascript tokens.txt tabla_simbolos.txt");
+            System.err.println("Uso: java -cp target/classes pl.ts.Main fichero.js tokens.txt tabla_simbolos.txt");
             return;
         }
 
