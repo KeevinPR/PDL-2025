@@ -78,3 +78,65 @@ function, return, if, for, int, float, boolean, string, void, write, read
 - `SymbolTableManager.java` - La lógica interna
 - `TSApi.java` - Lo que usa el analizador léxico
 - `Main.java` - Demo para probar
+
+# myjs-ts-demo
+
+Proyecto de analizador léxico y tabla de símbolos para el lenguaje MyJS (PDL 2025, grupo 148).
+
+## Compilar
+
+```bash
+mvn -q -DskipTests package
+```
+
+Esto genera el jar en `target/myjs-ts-demo.jar`.
+
+## Ejecutar
+
+```bash
+java -jar target/myjs-ts-demo.jar fuente.javascript tokens.txt tabla_simbolos.txt
+```
+
+- `fuente.javascript`: programa MyJS de entrada.
+- `tokens.txt`: fichero de salida con la lista de tokens.
+- `tabla_simbolos.txt`: volcado de la tabla de símbolos global.
+
+## Uso básico de la tabla de símbolos
+
+El analizador léxico solo necesita tres llamadas a `TSApi`:
+
+```java
+// Al empezar el análisis
+TSApi.start("tabla_simbolos.txt");
+
+// Cuando reconoce un identificador
+int handle = TSApi.ensureId(lexema, numeroLinea);
+// Se usa ese handle como atributo del token CODid
+
+// Al terminar el análisis
+TSApi.finish();
+```
+
+La tabla de símbolos guarda cada identificador una sola vez y le asigna un número (handle). Ese número es el atributo que aparece en los tokens de tipo `CODid`.
+
+## Formato de la tabla de símbolos
+
+Ejemplo de salida de `tabla_simbolos.txt`:
+
+```text
+TABLA PRINCIPAL # 1 :
+* 'miVariable'
++ Tipo : '-'
+
+* 'otraVariable'
++ Tipo : '-'
+```
+
+Para esta primera entrega solo se usa el atributo `Tipo` con el valor `'-'`. En entregas siguientes se rellenarán más atributos (tipo real, desplazamiento, etc.).
+
+## Archivos principales
+
+- `Lexer.java`: analizador léxico de MyJS.
+- `SymbolTableManager.java`: implementación de la tabla de símbolos.
+- `TSApi.java`: interfaz sencilla entre el léxico y la tabla de símbolos.
+- `Main.java`: punto de entrada, llama al léxico y cierra la TS.
