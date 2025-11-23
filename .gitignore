@@ -35,3 +35,5 @@ Thumbs.db
 # Test output
 tabla_simbolos.txt
 output.txt
+errores_lexicos.txt
+tokens.txt
