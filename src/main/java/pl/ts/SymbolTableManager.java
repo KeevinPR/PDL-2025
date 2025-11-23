@@ -4,19 +4,18 @@ import java.io.*;
 import java.util.*;
 
 public class SymbolTableManager {
-
-    // Símbolo sencillo: lexema, handle y atributos
+    // Entrada de la tabla de símbolos
     public static class Symbol {
-        public String lexema;
-        public int handle;
-        public String tipo;
-        public Map<String, Object> atributos;
+        public String lexema;                 // nombre
+        public int handle;                    // número interno de la TS
+        public String tipo;                   // tipo MyJS, '-' mientras no se conozca
+        public Map<String, Object> atributos; // atributos extra
 
         public Symbol(String lexema, int handle) {
             this.lexema = lexema;
             this.handle = handle;
             this.tipo = "-";
-            this.atributos = new LinkedHashMap<String, Object>();
+            this.atributos = new LinkedHashMap<>();
         }
     }
 
@@ -30,7 +29,7 @@ public class SymbolTableManager {
         public SymbolTable(int id, String titulo) {
             this.id = id;
             this.titulo = titulo;
-            this.simbolos = new ArrayList<Symbol>();
+            this.simbolos = new ArrayList<>();
             this.nextHandle = 1;
         }
     }
@@ -40,27 +39,31 @@ public class SymbolTableManager {
     private int nextTableId;
 
     public SymbolTableManager(String outputPath) throws IOException {
+        // false -> sobrescribe siempre el fichero de TS
         this.writer = new PrintWriter(new FileWriter(outputPath, false));
-        this.tablas = new ArrayList<SymbolTable>();
+        this.tablas = new ArrayList<>();
         this.nextTableId = 1;
+        // En esta entrega solo usamos la tabla global
         enterScope("TABLA PRINCIPAL");
     }
 
+    // Crea una nueva tabla (nuevo ámbito)
     public void enterScope(String titulo) {
         SymbolTable tabla = new SymbolTable(nextTableId++, titulo);
         tablas.add(tabla);
     }
 
-    // Volcar y eliminar la tabla del tope
+    // Vuelca la tabla actual al fichero
     public void exitScope() {
         if (tablas.isEmpty()) {
             return;
         }
-        SymbolTable tabla = tablas.remove(tablas.size() - 1);
+        SymbolTable tabla = tablas.get(tablas.size() - 1);
         escribirTabla(tabla);
         writer.flush();
     }
 
+    // Busca un lexema en la tabla actual
     public Symbol buscarAqui(String lexema) {
         if (tablas.isEmpty()) {
             return null;
@@ -74,62 +77,47 @@ public class SymbolTableManager {
         return null;
     }
 
-    public Symbol insertar(String lexema, int linea) {
+    // Inserta un nuevo símbolo en la tabla actual
+    public Symbol insertar(String lexema) {
         if (tablas.isEmpty()) {
             return null;
         }
         SymbolTable tablaActual = tablas.get(tablas.size() - 1);
         Symbol simbolo = new Symbol(lexema, tablaActual.nextHandle++);
-        simbolo.atributos.put("lineaPrimera", linea);
-        simbolo.atributos.put("nOcurrencias", 1);
         tablaActual.simbolos.add(simbolo);
         return simbolo;
     }
 
+    // Devuelve el símbolo, creándolo si no existe
     public Symbol asegurar(String lexema, int linea) {
         Symbol simbolo = buscarAqui(lexema);
         if (simbolo == null) {
-            simbolo = insertar(lexema, linea);
-        } else {
-            Object v = simbolo.atributos.get("nOcurrencias");
-            int n = 0;
-            if (v instanceof Integer) {
-                n = (Integer) v;
-            }
-            simbolo.atributos.put("nOcurrencias", n + 1);
+            simbolo = insertar(lexema);
         }
+        // 'linea' se usará en fases posteriores (ahora no se guarda)
         return simbolo;
     }
 
+    // Para fases posteriores, cuando el semántico rellene más información
     public void setAtributo(Symbol simbolo, String nombre, Object valor) {
         simbolo.atributos.put(nombre, valor);
     }
 
+    // Cierra todas las tablas y las vuelca al fichero
     public void cerrarTodo() {
-        while (!tablas.isEmpty()) {
-            exitScope();
+        for (int i = tablas.size() - 1; i >= 0; i--) {
+            escribirTabla(tablas.get(i));
         }
         writer.close();
     }
 
+    // Volcado en el formato especificado en la práctica
     private void escribirTabla(SymbolTable tabla) {
         writer.println(tabla.titulo + " # " + tabla.id + " :");
-
         for (Symbol simbolo : tabla.simbolos) {
             writer.println("* '" + simbolo.lexema + "'");
             writer.println("+ Tipo : '" + simbolo.tipo + "'");
-
-            for (Map.Entry<String, Object> entrada : simbolo.atributos.entrySet()) {
-                String nombre = entrada.getKey();
-                Object valor = entrada.getValue();
-
-                writer.print("+ " + nombre + " : ");
-                if (valor instanceof String) {
-                    writer.println("'" + valor + "'");
-                } else {
-                    writer.println(valor);
-                }
-            }
+            // Ningun atributo extra por ahora
             writer.println();
         }
     }
