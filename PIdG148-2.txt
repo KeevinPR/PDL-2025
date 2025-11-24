@@ -1,0 +1,6 @@
+let int x  = "1";let num int = 12345;
+input
+;write{num};get(num,
+n1)let uu float;
+call hola();
+

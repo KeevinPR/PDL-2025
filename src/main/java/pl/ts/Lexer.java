@@ -12,6 +12,9 @@ public class Lexer {
     private BufferedWriter tokOut;   // salida de tokens
     private List<String> errores;    // lista de errores léxicos
 
+    // lista de tokens para el sintáctico
+    private List<Token> listaTokens;
+
     public Lexer(String rutaFuente, String rutaTokens) throws IOException {
         this.codigo = leerArchivo(rutaFuente);
         this.pos = 0;
@@ -19,6 +22,7 @@ public class Lexer {
         // he puesto false para sobrescribir siempre el fichero de tokens, cambiar a true si queremos añadir al final
         this.tokOut = new BufferedWriter(new FileWriter(rutaTokens, false));
         this.errores = new ArrayList<String>();
+        this.listaTokens = new ArrayList<Token>();
     }
 
     // Recorre todo el código y va sacando tokens
@@ -150,13 +154,19 @@ public class Lexer {
 
         // Guardar errores en fichero (si hay)
         if (!errores.isEmpty()) {
-            BufferedWriter errOut = new BufferedWriter(new FileWriter("errores_lexicos.txt", false));
+            // false -> sobreescribe errores anteriores
+            BufferedWriter errOut = new BufferedWriter(new FileWriter("errores.txt", false));
             for (String e : errores) {
                 errOut.write("Linea " + linea + " (LEXICO): " + e);
                 errOut.newLine();
             }
             errOut.close();
         }
+    }
+
+    // Devuelve la lista de tokens al sintáctico
+    public List<Token> getTokens() {
+        return listaTokens;
     }
 
     // Lee entero o real
@@ -286,14 +296,19 @@ public class Lexer {
         }
     }
 
-    // Escribe token
+    // Escribe token (y lo guarda para el sintáctico)
     private void escribirToken(String codigo, String atributo) throws IOException {
-        if (atributo == null || atributo.equals("")) {
+        String attr = (atributo == null) ? "" : atributo;
+
+        if (attr.equals("")) {
             tokOut.write("<" + codigo + ",>");
         } else {
-            tokOut.write("<" + codigo + "," + atributo + ">");
+            tokOut.write("<" + codigo + "," + attr + ">");
         }
         tokOut.newLine();
+
+        // Guardamos también el token en memoria
+        listaTokens.add(new Token(codigo, attr, linea));
     }
 
     private String leerArchivo(String ruta) throws IOException {
