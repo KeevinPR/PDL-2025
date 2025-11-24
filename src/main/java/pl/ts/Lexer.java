@@ -157,7 +157,8 @@ public class Lexer {
             // false -> sobreescribe errores anteriores
             BufferedWriter errOut = new BufferedWriter(new FileWriter("errores.txt", false));
             for (String e : errores) {
-                errOut.write("Linea " + linea + " (LEXICO): " + e);
+                // ya tiene el número de línea
+                errOut.write(e);
                 errOut.newLine();
             }
             errOut.close();
@@ -370,7 +371,8 @@ public class Lexer {
         return null;
     }
 
+    // guarda ya el número de línea junto con el mensaje
     private void registrarError(String mensaje) {
-        errores.add(mensaje);
+        errores.add("Linea " + linea + " (LEXICO): " + mensaje);
     }
 }
