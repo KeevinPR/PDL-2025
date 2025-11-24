@@ -1,0 +1,7 @@
+Linea 11 (LEXICO): carácter no reconocido: ':'
+Linea 7 (SINTACTICO): error en expresión aditiva
+Linea 7 (SINTACTICO): error en expresión de igualdad
+Linea 7 (SINTACTICO): se esperaba CODpc y se ha encontrado CODid
+Linea 7 (SINTACTICO): se esperaba inicio de declaración, función o sentencia
+Linea 7 (SINTACTICO): se esperaba EOF y se ha encontrado CODasig
+Linea 7 (SINTACTICO): entrada extra al final del programa

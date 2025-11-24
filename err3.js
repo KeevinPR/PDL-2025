@@ -1,9 +1,13 @@
-let int x;
+// err3: for con condición y actualización sin ; entre medias
 
-/* comentario de bloque no permitido */
-x = 10;
+let int i;
+let int limite;
 
-let string saludo;
-saludo = 'Hola';   // comillas simples no válidas en nuestro grupo
+i = 0;
+limite = 3;
 
-write saludo;
+for (i = 0; i == limite i = i + 1) {
+    write (i);
+}
+
+write (limite);
