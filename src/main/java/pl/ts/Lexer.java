@@ -152,17 +152,14 @@ public class Lexer {
 
         tokOut.close();
 
-        // Guardar errores en fichero (si hay)
-        if (!errores.isEmpty()) {
-            // false -> sobreescribe errores anteriores
-            BufferedWriter errOut = new BufferedWriter(new FileWriter("errores.txt", false));
-            for (String e : errores) {
-                // ya tiene el número de línea
-                errOut.write(e);
-                errOut.newLine();
-            }
-            errOut.close();
+        // Guardar errores en fichero (siempre se reinicia el fichero)
+        BufferedWriter errOut = new BufferedWriter(new FileWriter("errores.txt", false));
+        for (String e : errores) {
+            // e ya tiene el número de línea
+            errOut.write(e);
+            errOut.newLine();
         }
+        errOut.close();
     }
 
     // Devuelve la lista de tokens al sintáctico
