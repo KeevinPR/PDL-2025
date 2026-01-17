@@ -23,9 +23,10 @@ public class Parser {
             this.actual = null;
         }
         this.parseOut = new BufferedWriter(new FileWriter(rutaParse, false));
-        // cabecera requerida por el formato de parse
-        parseOut.write("descendente");
-        parseOut.newLine();   // salto de linea
+        // cabecera VASt,  D (descendente) o A (ascendente)
+        parseOut.write("D");
+        parseOut.newLine();
+
     
         // append = true para no machacar los errores léxicos
         this.errOut = new BufferedWriter(new FileWriter(rutaErrores, true));
