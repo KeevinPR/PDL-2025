@@ -18,7 +18,6 @@ public class Lexer {
     private String rutaErrores;
 
     public Lexer(String rutaFuente, String rutaTokens, String rutaErrores) throws IOException {
-    this.rutaErrores = rutaErrores;
         this.codigo = leerArchivo(rutaFuente);
         this.pos = 0;
         this.linea = 1;
@@ -77,14 +76,14 @@ public class Lexer {
             if (c == '/') {
                 char sig = mirarSiguiente();
                 if (sig == '/') {
-                    siguienteCaracter(); // consumimos el segundo '/'
+                    siguienteCaracter();
                     saltarComentario();
-                    continue;
                 } else {
-                    registrarError("se esperaba // para comentario");
-                    continue;
+                    registrarError("carácter '/' no permitido (solo se permiten comentarios //)");
                 }
+                continue;
             }
+            
 
             // operadores y separadores simples
             if (c == '+') {
