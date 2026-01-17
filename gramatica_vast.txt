@@ -1,0 +1,76 @@
+Terminales = { let function int float boolean string void if for return write read id entero real cadena + == ! = %= ; ( ) { } , eof }
+NoTerminales = { P G E F S D D1 T R B PO PL LP PA LS OP SA SF SI SR SW ST F0 F1 F2 X0 X X1 X19 X2 X29 X3 V V9 AO AL AL9 }
+Axioma = P
+Producciones = {
+P -> G eof
+G -> E G
+G -> lambda
+E -> D
+E -> F
+E -> S
+D -> let T id D1 ;
+D1 -> = X
+D1 -> lambda
+T -> int
+T -> float
+T -> boolean
+T -> string
+F -> function R id ( PO ) B
+R -> T
+R -> void
+PO -> PL
+PO -> lambda
+PL -> PA LP
+LP -> , PA LP
+LP -> lambda
+PA -> T id
+B -> { LS }
+LS -> S LS
+LS -> lambda
+S -> SA
+S -> SF
+S -> SI
+S -> SR
+S -> SW
+S -> ST
+S -> B
+S -> ;
+SA -> id OP X ;
+OP -> =
+OP -> %=
+SF -> for ( F0 ; F1 ; F2 ) S
+F0 -> id OP X
+F0 -> let T id D1
+F0 -> lambda
+F1 -> X
+F1 -> lambda
+F2 -> id OP X
+F2 -> lambda
+SI -> if ( X ) S
+SR -> read ( id ) ;
+SW -> write ( X ) ;
+ST -> return X0 ;
+X0 -> X
+X0 -> lambda
+X -> X1
+X1 -> X2 X19
+X19 -> == X2 X19
+X19 -> lambda
+X2 -> X3 X29
+X29 -> + X3 X29
+X29 -> lambda
+X3 -> ! X3
+X3 -> V
+V -> id V9
+V -> entero
+V -> real
+V -> cadena
+V -> ( X )
+V9 -> ( AO )
+V9 -> lambda
+AO -> AL
+AO -> lambda
+AL -> X AL9
+AL9 -> , X AL9
+AL9 -> lambda
+}
