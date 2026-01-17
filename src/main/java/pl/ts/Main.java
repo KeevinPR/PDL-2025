@@ -22,7 +22,7 @@ public class Main {
             TSApi.start(archivoTS);
 
             // Analizador léxico
-            Lexer lexer = new Lexer(archivoFuente, archivoTokens);
+            Lexer lexer = new Lexer(archivoFuente, archivoTokens, archivoErrores);
             lexer.analizar();
 
             TSApi.finish();

@@ -15,7 +15,10 @@ public class Lexer {
     // lista de tokens para el sintáctico
     private List<Token> listaTokens;
 
-    public Lexer(String rutaFuente, String rutaTokens) throws IOException {
+    private String rutaErrores;
+
+    public Lexer(String rutaFuente, String rutaTokens, String rutaErrores) throws IOException {
+    this.rutaErrores = rutaErrores;
         this.codigo = leerArchivo(rutaFuente);
         this.pos = 0;
         this.linea = 1;
@@ -23,6 +26,7 @@ public class Lexer {
         this.tokOut = new BufferedWriter(new FileWriter(rutaTokens, false));
         this.errores = new ArrayList<String>();
         this.listaTokens = new ArrayList<Token>();
+        this.rutaErrores = rutaErrores;
     }
 
     // Recorre todo el código y va sacando tokens
@@ -153,7 +157,7 @@ public class Lexer {
         tokOut.close();
 
         // Guardar errores en fichero (siempre se reinicia el fichero)
-        BufferedWriter errOut = new BufferedWriter(new FileWriter("errores.txt", false));
+        BufferedWriter errOut = new BufferedWriter(new FileWriter(rutaErrores, false));
         for (String e : errores) {
             // e ya tiene el número de línea
             errOut.write(e);
