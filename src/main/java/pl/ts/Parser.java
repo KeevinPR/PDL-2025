@@ -13,6 +13,11 @@ public class Parser {
 
     private BufferedWriter parseOut; // salida del parse
     private BufferedWriter errOut;   // se comparte con el léxico (errores.txt)
+    
+    // Control de errores: evita cascadas de errores en la misma linea
+    private int ultimaLineaError = -1;
+    private int erroresEnLinea = 0;
+    private static final int MAX_ERRORES_POR_LINEA = 1;
 
     public Parser(List<Token> tokens, String rutaParse, String rutaErrores) throws IOException {
         this.tokens = tokens;
@@ -42,7 +47,7 @@ public class Parser {
 
         // si al terminar no estamos en EOF, algo raro ha pasado
         if (actual != null && !"EOF".equals(actual.codigo)) {
-            error("entrada extra al final del programa");
+            error("sobra codigo despues del final del programa");
         }
 
         cerrar();
@@ -72,9 +77,20 @@ public class Parser {
         if (es(esperado)) {
             avanzar();
         } else {
-            error("se esperaba " + esperado + " y se ha encontrado " +
-                  (actual == null ? "EOF" : actual.codigo));
+            error("se esperaba " + nombreLegible(esperado) + " y se encontro " +
+                  nombreLegible(actual == null ? null : actual.codigo) + pista(esperado));
             avanzar();
+        }
+    }
+
+    // pistas cortas para errores comunes
+    private String pista(String esperado) {
+        switch (esperado) {
+            case "CODpc": return " (falta ';' al final?)";
+            case "CODparDer": return " (revisa los parentesis)";
+            case "CODLLder": return " (falta '}' de cierre?)";
+            case "CODLLizq": return " (falta '{' de apertura?)";
+            default: return "";
         }
     }
 
@@ -86,12 +102,60 @@ public class Parser {
 
     private void error(String msg) throws IOException {
         int linea = (actual == null ? -1 : actual.linea);
+        
+        // Limitar errores por linea para evitar cascadas
+        if (linea == ultimaLineaError) {
+            erroresEnLinea++;
+            if (erroresEnLinea > MAX_ERRORES_POR_LINEA) {
+                return; // Ignorar errores adicionales en la misma linea
+            }
+        } else {
+            ultimaLineaError = linea;
+            erroresEnLinea = 1;
+        }
+        
         if (linea == -1) {
             errOut.write("Linea ? (SINTACTICO): " + msg);
         } else {
             errOut.write("Linea " + linea + " (SINTACTICO): " + msg);
         }
         errOut.newLine();
+    }
+
+    // traduce código interno a nombre legible para mensajes
+    private String nombreLegible(String codigo) {
+        if (codigo == null) return "fin de fichero";
+        switch (codigo) {
+            case "CODpc": return "';'";
+            case "CODparIzq": return "'('";
+            case "CODparDer": return "')'";
+            case "CODLLizq": return "'{'";
+            case "CODLLder": return "'}'";
+            case "CODid": return "identificador";
+            case "CODcad": return "cadena";
+            case "CODce": return "entero";
+            case "CODcr": return "real";
+            case "CODasig": return "'='";
+            case "CODasigRes": return "'%='";
+            case "CODcoma": return "','";
+            case "CODsum": return "'+'";
+            case "CODrel": return "'=='";
+            case "CODlog": return "'!'";
+            case "PRlet": return "'let'";
+            case "PRfunction": return "'function'";
+            case "PRint": return "'int'";
+            case "PRfloat": return "'float'";
+            case "PRboolean": return "'boolean'";
+            case "PRstring": return "'string'";
+            case "PRvoid": return "'void'";
+            case "PRif": return "'if'";
+            case "PRfor": return "'for'";
+            case "PRreturn": return "'return'";
+            case "PRwrite": return "'write'";
+            case "PRread": return "'read'";
+            case "EOF": return "fin de fichero";
+            default: return codigo;
+        }
     }
 
     // helpers para conjuntos FIRST/FOLLOW que usamos muchas veces
@@ -204,7 +268,7 @@ public class Parser {
         } else if (es("EOF")) {
             regla(3); // lambda
         } else {
-            error("se esperaba inicio de declaración, función o sentencia");
+            error("se esperaba una declaracion, funcion o sentencia");
         }
     }
 
@@ -219,13 +283,13 @@ public class Parser {
             regla(6);
             S();
         } else {
-            error("se esperaba let, function o una sentencia");
+            error("se esperaba 'let', 'function' o una sentencia");
         }
     }
 
     private void D() throws IOException {
         if (!es("PRlet")) {
-            error("se esperaba let en una declaración");
+            error("se esperaba 'let' para declarar variable");
         }
         regla(7);
         match("PRlet");
@@ -243,7 +307,7 @@ public class Parser {
         } else if (es("CODpc")) {
             regla(9); // lambda
         } else {
-            error("se esperaba '=' o ';' en la declaración");
+            error("se esperaba '=' o ';' en la declaracion");
         }
     }
 
@@ -261,7 +325,7 @@ public class Parser {
             regla(13);
             match("PRstring");
         } else {
-            error("se esperaba un tipo (int,float,boolean,string)");
+            error("se esperaba un tipo: int, float, boolean o string");
         }
     }
 
@@ -284,7 +348,7 @@ public class Parser {
             regla(16);
             match("PRvoid");
         } else {
-            error("se esperaba tipo de retorno o void");
+            error("se esperaba un tipo (int, float, boolean, string) o 'void'");
         }
     }
 
@@ -293,9 +357,9 @@ public class Parser {
             regla(17);
             PL();
         } else if (es("CODparDer")) {
-            regla(18); // lambda
+            regla(18); // lambda - ()
         } else {
-            error("error en parámetros de la función");
+            error("parametro incorrecto: se esperaba un tipo o ')' para cerrar");
         }
     }
 
@@ -314,7 +378,7 @@ public class Parser {
         } else if (es("CODparDer")) {
             regla(21); // lambda
         } else {
-            error("se esperaba ',' o ')' en la lista de parámetros");
+            error("se esperaba ',' o ')' en la lista de parametros");
         }
     }
 
@@ -339,7 +403,7 @@ public class Parser {
         } else if (es("CODLLder")) {
             regla(25); // lambda
         } else {
-            error("error en lista de sentencias");
+            error("se esperaba una sentencia o '}' para cerrar el bloque");
         }
     }
 
@@ -369,7 +433,7 @@ public class Parser {
             regla(33);
             match("CODpc");
         } else {
-            error("sentencia no válida");
+            error("sentencia no valida: se esperaba identificador, if, for, read, write, return, '{' o ';'");
             avanzar();
         }
     }
@@ -377,8 +441,16 @@ public class Parser {
     private void SA() throws IOException {
         regla(34);
         match("CODid");
-        OP();
-        X();
+        if (es("CODparIzq")) {
+            // Llamada a función: id ( args ) ;
+            match("CODparIzq");
+            AO();
+            match("CODparDer");
+        } else {
+            // Asignación: id OP X ;
+            OP();
+            X();
+        }
         match("CODpc");
     }
 
@@ -422,7 +494,7 @@ public class Parser {
         } else if (es("CODpc")) {
             regla(40); // lambda
         } else {
-            error("error en la inicialización del for");
+            error("inicializacion del for: se esperaba asignacion, 'let' o nada");
         }
     }
 
@@ -433,7 +505,7 @@ public class Parser {
         } else if (es("CODpc")) {
             regla(42); // lambda
         } else {
-            error("error en la condición del for");
+            error("condicion del for: se esperaba una expresion o nada");
         }
     }
 
@@ -446,7 +518,31 @@ public class Parser {
         } else if (es("CODparDer")) {
             regla(44); // lambda
         } else {
-            error("error en el incremento del for");
+            error("incremento del for: se esperaba asignacion o nada");
+        }
+    }
+
+    // SS - Sentencia Simple (solo para cuerpo del if simple)
+    // Solo permite: asignación/llamada, read, write, return, ;
+    private void SS() throws IOException {
+        if (es("CODid")) {
+            regla(26);
+            SA();
+        } else if (es("PRread")) {
+            regla(29);
+            SR();
+        } else if (es("PRwrite")) {
+            regla(30);
+            SW();
+        } else if (es("PRreturn")) {
+            regla(31);
+            ST();
+        } else if (es("CODpc")) {
+            regla(33);
+            match("CODpc");
+        } else {
+            error("el cuerpo del if solo admite sentencias simples (asignacion, read, write, return o ';')");
+            avanzar();
         }
     }
 
@@ -456,24 +552,35 @@ public class Parser {
         match("CODparIzq");
         X();
         match("CODparDer");
-        S();
+        SS();
     }
 
     private void SR() throws IOException {
         regla(46);
         match("PRread");
-        match("CODparIzq");
-        match("CODid");
-        match("CODparDer");
+        if (es("CODparIzq")) {
+            match("CODparIzq");
+            match("CODid");
+            match("CODparDer");
+        } else {
+            match("CODid");
+        }
         match("CODpc");
     }
 
     private void SW() throws IOException {
         regla(47);
         match("PRwrite");
-        match("CODparIzq");
-        X();
-        match("CODparDer");
+        if (es("CODparIzq")) {
+            match("CODparIzq");
+            X();
+            match("CODparDer");
+        } else if (es("CODpc")) {
+            // write ; -> falta expresión
+            error("write debe ir seguido de una expresion");
+        } else {
+            X();
+        }
         match("CODpc");
     }
 
@@ -491,7 +598,7 @@ public class Parser {
         } else if (es("CODpc")) {
             regla(50); // lambda
         } else {
-            error("error en return");
+            error("return incorrecto, se esperaba una expresion o ';'");
         }
     }
 
@@ -512,10 +619,10 @@ public class Parser {
             match("CODrel");
             X2();
             X1p();
-        } else if (es("CODparDer") || es("CODcoma") || es("CODpc")) {
-            regla(54); // lambda
         } else {
-            error("error en expresión de igualdad");
+            // Lambda: cualquier otro token termina la expresion relacional
+            // El error (si lo hay) se detectara en el nivel superior
+            regla(54);
         }
     }
 
@@ -531,10 +638,10 @@ public class Parser {
             match("CODsum");
             X3();
             X2p();
-        } else if (es("CODparDer") || es("CODcoma") || es("CODpc") || es("CODrel")) {
-            regla(57); // lambda
         } else {
-            error("error en expresión aditiva");
+            // Lambda: cualquier otro token termina la expresion aditiva
+            // El error (si lo hay) se detectara en el nivel superior
+            regla(57);
         }
     }
 
@@ -547,7 +654,7 @@ public class Parser {
             regla(59);
             V();
         } else {
-            error("error en expresión unaria");
+            error("se esperaba una expresion (identificador, numero, cadena o '(')");
         }
     }
 
@@ -581,11 +688,9 @@ public class Parser {
             match("CODparIzq");
             AO();
             match("CODparDer");
-        } else if (es("CODparDer") || es("CODsum") || es("CODcoma")
-                || es("CODpc") || es("CODrel")) {
-            regla(66); // lambda
         } else {
-            error("error tras identificador");
+            // Lambda: el identificador no es una llamada a funcion
+            regla(66);
         }
     }
 
@@ -596,7 +701,7 @@ public class Parser {
         } else if (es("CODparDer")) {
             regla(68); // lambda
         } else {
-            error("error en lista de argumentos");
+            error("argumento incorrecto en llamada a funcion");
         }
     }
 
@@ -615,7 +720,7 @@ public class Parser {
         } else if (es("CODparDer")) {
             regla(71); // lambda
         } else {
-            error("error en lista de argumentos");
+            error("se esperaba ',' o ')' en los argumentos");
         }
     }
 }

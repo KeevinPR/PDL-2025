@@ -16,6 +16,11 @@ public class Lexer {
     private List<Token> listaTokens;
 
     private String rutaErrores;
+    
+    // Control de errores: evita cascadas de errores en la misma linea
+    private int ultimaLineaErrorLexico = -1;
+    private int erroresEnLineaLexico = 0;
+    private static final int MAX_ERRORES_LEXICO_POR_LINEA = 2;
 
     public Lexer(String rutaFuente, String rutaTokens, String rutaErrores) throws IOException {
         this.codigo = leerArchivo(rutaFuente);
@@ -79,7 +84,7 @@ public class Lexer {
                     siguienteCaracter();
                     saltarComentario();
                 } else {
-                    registrarError("carácter '/' no permitido (solo se permiten comentarios //)");
+                    registrarError("caracter '/' no permitido (solo comentarios //)");
                 }
                 continue;
             }
@@ -150,7 +155,7 @@ public class Lexer {
             }
 
             // cualquier otro carácter es error
-            registrarError("carácter no reconocido: '" + c + "'");
+            registrarError("caracter no reconocido: '" + c + "'");
         }
 
         tokOut.close();
@@ -195,7 +200,7 @@ public class Lexer {
                     c = siguienteCaracter();
                 }
             } else {
-                registrarError("número real mal formado (falta dígito después del punto)");
+                registrarError("numero real mal formado (falta digito despues del punto)");
             }
         }
 
@@ -210,10 +215,10 @@ public class Lexer {
                 if (valor < 32767) {
                     escribirToken("CODce", lexema);
                 } else {
-                    registrarError("entero no válido (mayor o igual que 32767)");
+                    registrarError("entero fuera de rango (debe ser menor que 32767)");
                 }
             } catch (NumberFormatException e) {
-                registrarError("entero no válido");
+                registrarError("entero no valido");
             }
         } else {
             try {
@@ -221,10 +226,10 @@ public class Lexer {
                 if (valor < 117549436.0) {
                     escribirToken("CODcr", lexema);
                 } else {
-                    registrarError("real no válido (mayor o igual que 117549436.0)");
+                    registrarError("real fuera de rango (debe ser menor que 117549436.0)");
                 }
             } catch (NumberFormatException e) {
-                registrarError("real no válido");
+                registrarError("real no valido");
             }
         }
     }
@@ -282,7 +287,7 @@ public class Lexer {
                 String lexema = sb.toString();
                 escribirToken("CODcad", "\"" + lexema + "\"");
             } else {
-                registrarError("cadena no válida (longitud mayor o igual que 64)");
+                registrarError("cadena demasiado larga (maximo 63 caracteres)");
             }
         }
     }
@@ -373,6 +378,17 @@ public class Lexer {
 
     // guarda ya el número de línea junto con el mensaje
     private void registrarError(String mensaje) {
+        // Limitar errores por linea para evitar cascadas
+        if (linea == ultimaLineaErrorLexico) {
+            erroresEnLineaLexico++;
+            if (erroresEnLineaLexico > MAX_ERRORES_LEXICO_POR_LINEA) {
+                return; // Ignorar errores adicionales en la misma linea
+            }
+        } else {
+            ultimaLineaErrorLexico = linea;
+            erroresEnLineaLexico = 1;
+        }
+        
         errores.add("Linea " + linea + " (LEXICO): " + mensaje);
     }
 }
