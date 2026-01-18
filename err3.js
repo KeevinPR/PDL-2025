@@ -1,13 +1,13 @@
-// err3: for con condición y actualización sin ; entre medias
+// falta punto y coma en for
+// ; faltante en estructura for
 
 let int i;
-let int limite;
+let int total;
 
-i = 0;
-limite = 3;
+total = 0;
 
-for (i = 0; i == limite i = i + 1) {
-    write (i);
+for (i = 1; i == 5 i %= 2) {
+    total = total + i;
 }
 
-write (limite);
+write(total);

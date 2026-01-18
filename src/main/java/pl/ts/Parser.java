@@ -45,8 +45,8 @@ public class Parser {
 
         P(); // símbolo inicial
 
-        // si al terminar no estamos en EOF, algo raro ha pasado
-        if (actual != null && !"EOF".equals(actual.codigo)) {
+        // si al terminar no estamos en cod_eof, algo raro ha pasado
+        if (actual != null && !"cod_eof".equals(actual.codigo)) {
             error("sobra codigo despues del final del programa");
         }
 
@@ -86,10 +86,10 @@ public class Parser {
     // pistas cortas para errores comunes
     private String pista(String esperado) {
         switch (esperado) {
-            case "CODpc": return " (falta ';' al final?)";
-            case "CODparDer": return " (revisa los parentesis)";
-            case "CODLLder": return " (falta '}' de cierre?)";
-            case "CODLLizq": return " (falta '{' de apertura?)";
+            case "cod_pc": return " (falta ';' al final?)";
+            case "cod_parDer": return " (revisa los parentesis)";
+            case "cod_LLder": return " (falta '}' de cierre?)";
+            case "cod_LLizq": return " (falta '{' de apertura?)";
             default: return "";
         }
     }
@@ -126,34 +126,34 @@ public class Parser {
     private String nombreLegible(String codigo) {
         if (codigo == null) return "fin de fichero";
         switch (codigo) {
-            case "CODpc": return "';'";
-            case "CODparIzq": return "'('";
-            case "CODparDer": return "')'";
-            case "CODLLizq": return "'{'";
-            case "CODLLder": return "'}'";
-            case "CODid": return "identificador";
-            case "CODcad": return "cadena";
-            case "CODce": return "entero";
-            case "CODcr": return "real";
-            case "CODasig": return "'='";
-            case "CODasigRes": return "'%='";
-            case "CODcoma": return "','";
-            case "CODsum": return "'+'";
-            case "CODrel": return "'=='";
-            case "CODlog": return "'!'";
-            case "PRlet": return "'let'";
-            case "PRfunction": return "'function'";
-            case "PRint": return "'int'";
-            case "PRfloat": return "'float'";
-            case "PRboolean": return "'boolean'";
-            case "PRstring": return "'string'";
-            case "PRvoid": return "'void'";
-            case "PRif": return "'if'";
-            case "PRfor": return "'for'";
-            case "PRreturn": return "'return'";
-            case "PRwrite": return "'write'";
-            case "PRread": return "'read'";
-            case "EOF": return "fin de fichero";
+            case "cod_pc": return "';'";
+            case "cod_parIzq": return "'('";
+            case "cod_parDer": return "')'";
+            case "cod_LLizq": return "'{'";
+            case "cod_LLder": return "'}'";
+            case "cod_id": return "identificador";
+            case "cod_cad": return "cadena";
+            case "cod_ce": return "entero";
+            case "cod_cr": return "real";
+            case "cod_asig": return "'='";
+            case "cod_asigRes": return "'%='";
+            case "cod_coma": return "','";
+            case "cod_sum": return "'+'";
+            case "cod_rel": return "'=='";
+            case "cod_log": return "'!'";
+            case "PR_let": return "'let'";
+            case "PR_function": return "'function'";
+            case "PR_int": return "'int'";
+            case "PR_float": return "'float'";
+            case "PR_boolean": return "'boolean'";
+            case "PR_string": return "'string'";
+            case "PR_void": return "'void'";
+            case "PR_if": return "'if'";
+            case "PR_for": return "'for'";
+            case "PR_return": return "'return'";
+            case "PR_write": return "'write'";
+            case "PR_read": return "'read'";
+            case "cod_eof": return "fin de fichero";
             default: return codigo;
         }
     }
@@ -161,23 +161,23 @@ public class Parser {
     // helpers para conjuntos FIRST/FOLLOW que usamos muchas veces
 
     private boolean esTipo() {
-        return es("PRint") || es("PRfloat") || es("PRboolean") || es("PRstring");
+        return es("PR_int") || es("PR_float") || es("PR_boolean") || es("PR_string");
     }
 
     private boolean esInicioSentencia() {
-        return es("CODid") || es("PRfor") || es("PRif") || es("PRread")
-                || es("PRwrite") || es("PRreturn") || es("CODLLizq")
-                || es("CODpc");
+        return es("cod_id") || es("PR_for") || es("PR_if") || es("PR_read")
+                || es("PR_write") || es("PR_return") || es("cod_LLizq")
+                || es("cod_pc");
     }
 
     private boolean esInicioExpr() {
-        return es("CODlog") || es("CODparIzq") || es("CODcad")
-                || es("CODce") || es("CODid") || es("CODcr");
+        return es("cod_log") || es("cod_parIzq") || es("cod_cad")
+                || es("cod_ce") || es("cod_id") || es("cod_cr");
     }
 
     private boolean esInicioPrimario() {
-        return es("CODid") || es("CODce") || es("CODcr")
-                || es("CODcad") || es("CODparIzq");
+        return es("cod_id") || es("cod_ce") || es("cod_cr")
+                || es("cod_cad") || es("cod_parIzq");
     }
 
     //reglas de la gramática
@@ -257,15 +257,15 @@ public class Parser {
     private void P() throws IOException {
         regla(1);
         G();
-        match("EOF");
+        match("cod_eof");
     }
 
     private void G() throws IOException {
-        if (esInicioSentencia() || es("PRlet") || es("PRfunction")) {
+        if (esInicioSentencia() || es("PR_let") || es("PR_function")) {
             regla(2);
             E();
             G();
-        } else if (es("EOF")) {
+        } else if (es("cod_eof")) {
             regla(3); // lambda
         } else {
             error("se esperaba una declaracion, funcion o sentencia");
@@ -273,10 +273,10 @@ public class Parser {
     }
 
     private void E() throws IOException {
-        if (es("PRlet")) {
+        if (es("PR_let")) {
             regla(4);
             D();
-        } else if (es("PRfunction")) {
+        } else if (es("PR_function")) {
             regla(5);
             F();
         } else if (esInicioSentencia()) {
@@ -288,23 +288,23 @@ public class Parser {
     }
 
     private void D() throws IOException {
-        if (!es("PRlet")) {
+        if (!es("PR_let")) {
             error("se esperaba 'let' para declarar variable");
         }
         regla(7);
-        match("PRlet");
+        match("PR_let");
         T();
-        match("CODid");
+        match("cod_id");
         D1();
-        match("CODpc");
+        match("cod_pc");
     }
 
     private void D1() throws IOException {
-        if (es("CODasig")) {
+        if (es("cod_asig")) {
             regla(8);
-            match("CODasig");
+            match("cod_asig");
             X();
-        } else if (es("CODpc")) {
+        } else if (es("cod_pc")) {
             regla(9); // lambda
         } else {
             error("se esperaba '=' o ';' en la declaracion");
@@ -312,18 +312,18 @@ public class Parser {
     }
 
     private void T() throws IOException {
-        if (es("PRint")) {
+        if (es("PR_int")) {
             regla(10);
-            match("PRint");
-        } else if (es("PRfloat")) {
+            match("PR_int");
+        } else if (es("PR_float")) {
             regla(11);
-            match("PRfloat");
-        } else if (es("PRboolean")) {
+            match("PR_float");
+        } else if (es("PR_boolean")) {
             regla(12);
-            match("PRboolean");
-        } else if (es("PRstring")) {
+            match("PR_boolean");
+        } else if (es("PR_string")) {
             regla(13);
-            match("PRstring");
+            match("PR_string");
         } else {
             error("se esperaba un tipo: int, float, boolean o string");
         }
@@ -331,12 +331,12 @@ public class Parser {
 
     private void F() throws IOException {
         regla(14);
-        match("PRfunction");
+        match("PR_function");
         R();
-        match("CODid");
-        match("CODparIzq");
+        match("cod_id");
+        match("cod_parIzq");
         PO();
-        match("CODparDer");
+        match("cod_parDer");
         B();
     }
 
@@ -344,9 +344,9 @@ public class Parser {
         if (esTipo()) {
             regla(15);
             T();
-        } else if (es("PRvoid")) {
+        } else if (es("PR_void")) {
             regla(16);
-            match("PRvoid");
+            match("PR_void");
         } else {
             error("se esperaba un tipo (int, float, boolean, string) o 'void'");
         }
@@ -356,7 +356,7 @@ public class Parser {
         if (esTipo()) {
             regla(17);
             PL();
-        } else if (es("CODparDer")) {
+        } else if (es("cod_parDer")) {
             regla(18); // lambda - ()
         } else {
             error("parametro incorrecto: se esperaba un tipo o ')' para cerrar");
@@ -370,12 +370,12 @@ public class Parser {
     }
 
     private void LP() throws IOException {
-        if (es("CODcoma")) {
+        if (es("cod_coma")) {
             regla(20);
-            match("CODcoma");
+            match("cod_coma");
             PA();
             LP();
-        } else if (es("CODparDer")) {
+        } else if (es("cod_parDer")) {
             regla(21); // lambda
         } else {
             error("se esperaba ',' o ')' en la lista de parametros");
@@ -385,14 +385,14 @@ public class Parser {
     private void PA() throws IOException {
         regla(22);
         T();
-        match("CODid");
+        match("cod_id");
     }
 
     private void B() throws IOException {
         regla(23);
-        match("CODLLizq");
+        match("cod_LLizq");
         LS();
-        match("CODLLder");
+        match("cod_LLder");
     }
 
     private void LS() throws IOException {
@@ -400,7 +400,7 @@ public class Parser {
             regla(24);
             S();
             LS();
-        } else if (es("CODLLder")) {
+        } else if (es("cod_LLder")) {
             regla(25); // lambda
         } else {
             error("se esperaba una sentencia o '}' para cerrar el bloque");
@@ -408,30 +408,30 @@ public class Parser {
     }
 
     private void S() throws IOException {
-        if (es("CODid")) {
+        if (es("cod_id")) {
             regla(26);
             SA();
-        } else if (es("PRfor")) {
+        } else if (es("PR_for")) {
             regla(27);
             SF();
-        } else if (es("PRif")) {
+        } else if (es("PR_if")) {
             regla(28);
             SI();
-        } else if (es("PRread")) {
+        } else if (es("PR_read")) {
             regla(29);
             SR();
-        } else if (es("PRwrite")) {
+        } else if (es("PR_write")) {
             regla(30);
             SW();
-        } else if (es("PRreturn")) {
+        } else if (es("PR_return")) {
             regla(31);
             ST();
-        } else if (es("CODLLizq")) {
+        } else if (es("cod_LLizq")) {
             regla(32);
             B();
-        } else if (es("CODpc")) {
+        } else if (es("cod_pc")) {
             regla(33);
-            match("CODpc");
+            match("cod_pc");
         } else {
             error("sentencia no valida: se esperaba identificador, if, for, read, write, return, '{' o ';'");
             avanzar();
@@ -439,28 +439,35 @@ public class Parser {
     }
 
     private void SA() throws IOException {
+<<<<<<< Current (Your changes)
+        match("cod_id");
+        // Peek para decidir la regla
+        if (es("cod_parIzq")) {
+            regla(74); // SA -> id ( AO ) ; (llamada a función como sentencia)
+=======
         regla(34);
-        match("CODid");
-        if (es("CODparIzq")) {
+        match("cod_id");
+        if (es("cod_parIzq")) {
             // Llamada a función: id ( args ) ;
-            match("CODparIzq");
+>>>>>>> Incoming (Background Agent changes)
+            match("cod_parIzq");
             AO();
-            match("CODparDer");
+            match("cod_parDer");
         } else {
-            // Asignación: id OP X ;
+            regla(34); // SA -> id OP X ; (asignación)
             OP();
             X();
         }
-        match("CODpc");
+        match("cod_pc");
     }
 
     private void OP() throws IOException {
-        if (es("CODasig")) {
+        if (es("cod_asig")) {
             regla(35);
-            match("CODasig");
-        } else if (es("CODasigRes")) {
+            match("cod_asig");
+        } else if (es("cod_asigRes")) {
             regla(36);
-            match("CODasigRes");
+            match("cod_asigRes");
         } else {
             error("se esperaba '=' o '%='");
         }
@@ -468,30 +475,30 @@ public class Parser {
 
     private void SF() throws IOException {
         regla(37);
-        match("PRfor");
-        match("CODparIzq");
+        match("PR_for");
+        match("cod_parIzq");
         F0();
-        match("CODpc");
+        match("cod_pc");
         F1();
-        match("CODpc");
+        match("cod_pc");
         F2();
-        match("CODparDer");
+        match("cod_parDer");
         S();
     }
 
     private void F0() throws IOException {
-        if (es("CODid")) {
+        if (es("cod_id")) {
             regla(38);
-            match("CODid");
+            match("cod_id");
             OP();
             X();
-        } else if (es("PRlet")) {
+        } else if (es("PR_let")) {
             regla(39);
-            match("PRlet");
+            match("PR_let");
             T();
-            match("CODid");
+            match("cod_id");
             D1();
-        } else if (es("CODpc")) {
+        } else if (es("cod_pc")) {
             regla(40); // lambda
         } else {
             error("inicializacion del for: se esperaba asignacion, 'let' o nada");
@@ -502,7 +509,7 @@ public class Parser {
         if (esInicioExpr()) {
             regla(41);
             X();
-        } else if (es("CODpc")) {
+        } else if (es("cod_pc")) {
             regla(42); // lambda
         } else {
             error("condicion del for: se esperaba una expresion o nada");
@@ -510,12 +517,12 @@ public class Parser {
     }
 
     private void F2() throws IOException {
-        if (es("CODid")) {
+        if (es("cod_id")) {
             regla(43);
-            match("CODid");
+            match("cod_id");
             OP();
             X();
-        } else if (es("CODparDer")) {
+        } else if (es("cod_parDer")) {
             regla(44); // lambda
         } else {
             error("incremento del for: se esperaba asignacion o nada");
@@ -525,21 +532,21 @@ public class Parser {
     // SS - Sentencia Simple (solo para cuerpo del if simple)
     // Solo permite: asignación/llamada, read, write, return, ;
     private void SS() throws IOException {
-        if (es("CODid")) {
+        if (es("cod_id")) {
             regla(26);
             SA();
-        } else if (es("PRread")) {
+        } else if (es("PR_read")) {
             regla(29);
             SR();
-        } else if (es("PRwrite")) {
+        } else if (es("PR_write")) {
             regla(30);
             SW();
-        } else if (es("PRreturn")) {
+        } else if (es("PR_return")) {
             regla(31);
             ST();
-        } else if (es("CODpc")) {
+        } else if (es("cod_pc")) {
             regla(33);
-            match("CODpc");
+            match("cod_pc");
         } else {
             error("el cuerpo del if solo admite sentencias simples (asignacion, read, write, return o ';')");
             avanzar();
@@ -548,54 +555,54 @@ public class Parser {
 
     private void SI() throws IOException {
         regla(45);
-        match("PRif");
-        match("CODparIzq");
+        match("PR_if");
+        match("cod_parIzq");
         X();
-        match("CODparDer");
+        match("cod_parDer");
         SS();
     }
 
     private void SR() throws IOException {
         regla(46);
-        match("PRread");
-        if (es("CODparIzq")) {
-            match("CODparIzq");
-            match("CODid");
-            match("CODparDer");
+        match("PR_read");
+        if (es("cod_parIzq")) {
+            match("cod_parIzq");
+            match("cod_id");
+            match("cod_parDer");
         } else {
-            match("CODid");
+            match("cod_id");
         }
-        match("CODpc");
+        match("cod_pc");
     }
 
     private void SW() throws IOException {
         regla(47);
-        match("PRwrite");
-        if (es("CODparIzq")) {
-            match("CODparIzq");
+        match("PR_write");
+        if (es("cod_parIzq")) {
+            match("cod_parIzq");
             X();
-            match("CODparDer");
-        } else if (es("CODpc")) {
+            match("cod_parDer");
+        } else if (es("cod_pc")) {
             // write ; -> falta expresión
             error("write debe ir seguido de una expresion");
         } else {
             X();
         }
-        match("CODpc");
+        match("cod_pc");
     }
 
     private void ST() throws IOException {
         regla(48);
-        match("PRreturn");
+        match("PR_return");
         X0();
-        match("CODpc");
+        match("cod_pc");
     }
 
     private void X0() throws IOException {
         if (esInicioExpr()) {
             regla(49);
             X();
-        } else if (es("CODpc")) {
+        } else if (es("cod_pc")) {
             regla(50); // lambda
         } else {
             error("return incorrecto, se esperaba una expresion o ';'");
@@ -614,9 +621,9 @@ public class Parser {
     }
 
     private void X1p() throws IOException {
-        if (es("CODrel")) { // ==
+        if (es("cod_rel")) { // ==
             regla(53);
-            match("CODrel");
+            match("cod_rel");
             X2();
             X1p();
         } else {
@@ -633,9 +640,9 @@ public class Parser {
     }
 
     private void X2p() throws IOException {
-        if (es("CODsum")) {
+        if (es("cod_sum")) {
             regla(56);
-            match("CODsum");
+            match("cod_sum");
             X3();
             X2p();
         } else {
@@ -646,9 +653,9 @@ public class Parser {
     }
 
     private void X3() throws IOException {
-        if (es("CODlog")) {
+        if (es("cod_log")) {
             regla(58);
-            match("CODlog");
+            match("cod_log");
             X3();
         } else if (esInicioPrimario()) {
             regla(59);
@@ -659,35 +666,35 @@ public class Parser {
     }
 
     private void V() throws IOException {
-        if (es("CODid")) {
+        if (es("cod_id")) {
             regla(60);
-            match("CODid");
+            match("cod_id");
             Vp();
-        } else if (es("CODce")) {
+        } else if (es("cod_ce")) {
             regla(61);
-            match("CODce");
-        } else if (es("CODcr")) {
+            match("cod_ce");
+        } else if (es("cod_cr")) {
             regla(62);
-            match("CODcr");
-        } else if (es("CODcad")) {
+            match("cod_cr");
+        } else if (es("cod_cad")) {
             regla(63);
-            match("CODcad");
-        } else if (es("CODparIzq")) {
+            match("cod_cad");
+        } else if (es("cod_parIzq")) {
             regla(64);
-            match("CODparIzq");
+            match("cod_parIzq");
             X();
-            match("CODparDer");
+            match("cod_parDer");
         } else {
             error("se esperaba identificador, constante o '('");
         }
     }
 
     private void Vp() throws IOException {
-        if (es("CODparIzq")) {
+        if (es("cod_parIzq")) {
             regla(65);
-            match("CODparIzq");
+            match("cod_parIzq");
             AO();
-            match("CODparDer");
+            match("cod_parDer");
         } else {
             // Lambda: el identificador no es una llamada a funcion
             regla(66);
@@ -698,7 +705,7 @@ public class Parser {
         if (esInicioExpr()) {
             regla(67);
             AL();
-        } else if (es("CODparDer")) {
+        } else if (es("cod_parDer")) {
             regla(68); // lambda
         } else {
             error("argumento incorrecto en llamada a funcion");
@@ -712,12 +719,12 @@ public class Parser {
     }
 
     private void ALp() throws IOException {
-        if (es("CODcoma")) {
+        if (es("cod_coma")) {
             regla(70);
-            match("CODcoma");
+            match("cod_coma");
             X();
             ALp();
-        } else if (es("CODparDer")) {
+        } else if (es("cod_parDer")) {
             regla(71); // lambda
         } else {
             error("se esperaba ',' o ')' en los argumentos");

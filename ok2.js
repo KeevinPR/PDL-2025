@@ -1,20 +1,19 @@
-// ok2: función con parámetro, if y for
+// Estructuras de control
+// for, if simple, operador modulo-asignacion
 
 let int contador;
-let int i;
+let int suma;
+let int resto;
 
-function int contarHasta(int limite) {
-    contador = 0;
+suma = 0;
+resto = 100;
 
-    for (i = 0; i == limite; i = i + 1) {
-        if (contador == 0) 
-            contador = contador + 1;
-        
-    }
-
-    return contador;
+for (contador = 1; contador == 10; contador = contador + 1) {
+    suma = suma + contador;
+    resto %= 3;
+    
+    if (resto == 0)
+        write(contador);
 }
 
-let int resultado;
-resultado = contarHasta(0);
-write (resultado);
+write(suma);

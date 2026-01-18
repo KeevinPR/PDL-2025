@@ -73,4 +73,6 @@ AO -> lambda
 AL -> X AL9
 AL9 -> , X AL9
 AL9 -> lambda
+SR -> read id ;
+SW -> write X ;
 }

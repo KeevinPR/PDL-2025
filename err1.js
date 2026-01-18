@@ -1,10 +1,12 @@
-// err1: falta punto y coma en una asignación y sobra el : en la declaración de variables
+// falta punto y coma en asignacion
+//  ; faltante en diferentes contador
 
-let float a;
-let float b;
+let int contador;
+let float resultado;
 
-a =: 78.0
-b = 0.5;
+contador = 0
+resultado = 3.14;
 
-write (a);
-write (b);
+for (contador = 0; contador == 10; contador += 1) {
+    write(contador);
+}

@@ -1,13 +1,12 @@
-// err2: if sin paréntesis de cierre en la condición
+// falta parentesis de cierre en if
+// deteccion de parentesis desbalanceados
 
-let string nombre;
-let int longitud;
+let int x;
+let int resultado;
 
-nombre = "Esto es una cadena bien cerrada";
-longitud = 0;
+x = 10;
 
-if (longitud == 0 {
-    write (nombre);
-}
+if (x == 10
+    resultado = 1;
 
-write (longitud);
+write(resultado);

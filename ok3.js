@@ -1,17 +1,21 @@
-// ok3: for con asignación con resto (%=) y return de nuestro grupo 148
+// entrada/salida y expresiones
+// read, write, expresiones aritmeticas y relacionales
 
-let int i;
-let int resto;
+let int a;
+let int b;
+let int c;
 
-function int pares(int max) {
-    for (i = 0; i == max; i = i + 1) {
-        resto = i;
-        resto %= 2;          // operador específico de nuestro grupo 148
-        if (resto == 0)
-            write (i);
-    }
+read a;
+read(b);
 
-    return 0;
-}
+c = a + b;
+write(c);
 
-resto = pares(2);
+c = (a + b) + 10;
+write c;
+
+if (a == b)
+    write("Son iguales");
+
+if (c == 0)
+    ;

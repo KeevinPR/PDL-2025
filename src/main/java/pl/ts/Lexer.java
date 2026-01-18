@@ -17,10 +17,9 @@ public class Lexer {
 
     private String rutaErrores;
     
-    // Control de errores: evita cascadas de errores en la misma linea
-    private int ultimaLineaErrorLexico = -1;
-    private int erroresEnLineaLexico = 0;
-    private static final int MAX_ERRORES_LEXICO_POR_LINEA = 2;
+    // para no repetir muchos errores en la misma linea
+    private int lineaUltimoErrorLexico = -1;
+    private int contadorErrores = 0;
 
     public Lexer(String rutaFuente, String rutaTokens, String rutaErrores) throws IOException {
         this.codigo = leerArchivo(rutaFuente);
@@ -33,7 +32,7 @@ public class Lexer {
         this.rutaErrores = rutaErrores;
     }
 
-    // Recorre todo el código y va sacando tokens
+    // funcion principal del lexico
     public void analizar() throws IOException {
         char c;
 
@@ -42,7 +41,7 @@ public class Lexer {
 
             if (c == '\0') {
                 // fin de fichero
-                escribirToken("EOF", null);
+                escribirToken("cod_eof", null);
                 break;
             }
 
@@ -92,42 +91,42 @@ public class Lexer {
 
             // operadores y separadores simples
             if (c == '+') {
-                escribirToken("CODsum", null);
+                escribirToken("cod_sum", null);
                 continue;
             }
 
             if (c == '!') {
-                escribirToken("CODlog", null);
+                escribirToken("cod_log", null);
                 continue;
             }
 
             if (c == ';') {
-                escribirToken("CODpc", null);
+                escribirToken("cod_pc", null);
                 continue;
             }
 
             if (c == '(') {
-                escribirToken("CODparIzq", null);
+                escribirToken("cod_parIzq", null);
                 continue;
             }
 
             if (c == ')') {
-                escribirToken("CODparDer", null);
+                escribirToken("cod_parDer", null);
                 continue;
             }
 
             if (c == '{') {
-                escribirToken("CODLLizq", null);
+                escribirToken("cod_LLizq", null);
                 continue;
             }
 
             if (c == '}') {
-                escribirToken("CODLLder", null);
+                escribirToken("cod_LLder", null);
                 continue;
             }
 
             if (c == ',') {
-                escribirToken("CODcoma", null);
+                escribirToken("cod_coma", null);
                 continue;
             }
 
@@ -136,9 +135,9 @@ public class Lexer {
                 char sig = mirarSiguiente();
                 if (sig == '=') {
                     siguienteCaracter();
-                    escribirToken("CODrel", null); // ==
+                    escribirToken("cod_rel", null); // ==
                 } else {
-                    escribirToken("CODasig", null); // =
+                    escribirToken("cod_asig", null); // =
                 }
                 continue;
             }
@@ -147,7 +146,7 @@ public class Lexer {
                 char sig = mirarSiguiente();
                 if (sig == '=') {
                     siguienteCaracter();
-                    escribirToken("CODasigRes", null); // %=
+                    escribirToken("cod_asigRes", null); // %=
                 } else {
                     registrarError("operador % sin = no permitido");
                 }
@@ -175,7 +174,7 @@ public class Lexer {
         return listaTokens;
     }
 
-    // Lee entero o real
+    // numeros enteros y reales
     private void leerNumero() throws IOException {
         StringBuilder sb = new StringBuilder();
         char c = siguienteCaracter();
@@ -213,7 +212,7 @@ public class Lexer {
             try {
                 int valor = Integer.parseInt(lexema);
                 if (valor < 32767) {
-                    escribirToken("CODce", lexema);
+                    escribirToken("cod_ce", lexema);
                 } else {
                     registrarError("entero fuera de rango (debe ser menor que 32767)");
                 }
@@ -224,7 +223,7 @@ public class Lexer {
             try {
                 double valor = Double.parseDouble(lexema);
                 if (valor < 117549436.0) {
-                    escribirToken("CODcr", lexema);
+                    escribirToken("cod_cr", lexema);
                 } else {
                     registrarError("real fuera de rango (debe ser menor que 117549436.0)");
                 }
@@ -234,7 +233,7 @@ public class Lexer {
         }
     }
 
-    // Lee identificador o palabra reservada
+    // identificadores y palabras reservadas
     private void leerIdentificador() throws IOException {
         StringBuilder sb = new StringBuilder();
         char c = siguienteCaracter();
@@ -253,11 +252,11 @@ public class Lexer {
             escribirToken(codigoPR, null);
         } else {
             int handle = TSApi.ensureId(lexema, linea);
-            escribirToken("CODid", String.valueOf(handle));
+            escribirToken("cod_id", String.valueOf(handle));
         }
     }
 
-    // Lee cadena ("...")
+    // cadenas con comillas dobles
     private void leerCadena() throws IOException {
         StringBuilder sb = new StringBuilder();
         int longitud = 0;
@@ -285,7 +284,7 @@ public class Lexer {
         } else {
             if (longitud < 64) {
                 String lexema = sb.toString();
-                escribirToken("CODcad", "\"" + lexema + "\"");
+                escribirToken("cod_cad", "\"" + lexema + "\"");
             } else {
                 registrarError("cadena demasiado larga (maximo 63 caracteres)");
             }
@@ -302,7 +301,7 @@ public class Lexer {
         }
     }
 
-    // Escribe token (y lo guarda para el sintáctico)
+    // escribir token al fichero
     private void escribirToken(String codigo, String atributo) throws IOException {
         String attr = (atributo == null) ? "" : atributo;
 
@@ -313,7 +312,7 @@ public class Lexer {
         }
         tokOut.newLine();
 
-        // Guardamos también el token en memoria
+        // guardar en memoria para el sintactico
         listaTokens.add(new Token(codigo, attr, linea));
     }
 
@@ -359,34 +358,34 @@ public class Lexer {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
-    // códigos de palabras reservadas según la configuración de Draco
+    // comprobar si es palabra reservada
     private String codigoReservada(String lexema) {
-        if (lexema.equals("let")) return "PRlet";
-        if (lexema.equals("function")) return "PRfunction";
-        if (lexema.equals("int")) return "PRint";
-        if (lexema.equals("float")) return "PRfloat";
-        if (lexema.equals("boolean")) return "PRboolean";
-        if (lexema.equals("string")) return "PRstring";
-        if (lexema.equals("void")) return "PRvoid";
-        if (lexema.equals("if")) return "PRif";
-        if (lexema.equals("for")) return "PRfor";
-        if (lexema.equals("return")) return "PRreturn";
-        if (lexema.equals("write")) return "PRwrite";
-        if (lexema.equals("read")) return "PRread";
+        if (lexema.equals("let")) return "PR_let";
+        if (lexema.equals("function")) return "PR_function";
+        if (lexema.equals("int")) return "PR_int";
+        if (lexema.equals("float")) return "PR_float";
+        if (lexema.equals("boolean")) return "PR_boolean";
+        if (lexema.equals("string")) return "PR_string";
+        if (lexema.equals("void")) return "PR_void";
+        if (lexema.equals("if")) return "PR_if";
+        if (lexema.equals("for")) return "PR_for";
+        if (lexema.equals("return")) return "PR_return";
+        if (lexema.equals("write")) return "PR_write";
+        if (lexema.equals("read")) return "PR_read";
         return null;
     }
 
-    // guarda ya el número de línea junto con el mensaje
+    // guardar error
     private void registrarError(String mensaje) {
-        // Limitar errores por linea para evitar cascadas
-        if (linea == ultimaLineaErrorLexico) {
-            erroresEnLineaLexico++;
-            if (erroresEnLineaLexico > MAX_ERRORES_LEXICO_POR_LINEA) {
-                return; // Ignorar errores adicionales en la misma linea
+        // evitar demasiados errores en la misma linea
+        if (linea == lineaUltimoErrorLexico) {
+            contadorErrores++;
+            if (contadorErrores > 2) {
+                return;
             }
         } else {
-            ultimaLineaErrorLexico = linea;
-            erroresEnLineaLexico = 1;
+            lineaUltimoErrorLexico = linea;
+            contadorErrores = 1;
         }
         
         errores.add("Linea " + linea + " (LEXICO): " + mensaje);
