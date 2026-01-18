@@ -439,17 +439,10 @@ public class Parser {
     }
 
     private void SA() throws IOException {
-<<<<<<< Current (Your changes)
-        match("cod_id");
-        // Peek para decidir la regla
-        if (es("cod_parIzq")) {
-            regla(74); // SA -> id ( AO ) ; (llamada a función como sentencia)
-=======
         regla(34);
         match("cod_id");
         if (es("cod_parIzq")) {
             // Llamada a función: id ( args ) ;
->>>>>>> Incoming (Background Agent changes)
             match("cod_parIzq");
             AO();
             match("cod_parDer");
