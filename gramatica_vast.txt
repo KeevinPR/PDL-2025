@@ -34,6 +34,7 @@ S -> SR
 S -> SW
 S -> ST
 S -> B
+S -> D
 S -> ;
 SA -> id OP X ;
 OP -> =

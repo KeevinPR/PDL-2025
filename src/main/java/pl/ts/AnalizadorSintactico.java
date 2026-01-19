@@ -203,7 +203,7 @@ public class AnalizadorSintactico {
     private boolean esInicioSentencia() {
         return es("cod_id") || es("PR_for") || es("PR_if") || es("PR_read")
                 || es("PR_write") || es("PR_return") || es("cod_LLizq")
-                || es("cod_pc");
+                || es("cod_pc") || es("PR_let");
     }
 
     private boolean esInicioExpr() {
@@ -551,8 +551,11 @@ public class AnalizadorSintactico {
             regla(33);
             match("cod_pc");
             return "void";
+        } else if (es("PR_let")) {
+            D();
+            return "void";
         } else {
-            error("sentencia no valida: se esperaba identificador, if, for, read, write, return, '{' o ';'");
+            error("sentencia no valida: se esperaba identificador, if, for, read, write, return, '{', 'let' o ';'");
             avanzar();
             return "void";
         }
@@ -577,7 +580,7 @@ public class AnalizadorSintactico {
         } else {
             // Es una asignacion simple: variable = ... o variable %= ...
             TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
-            if (s == null) {
+            if (s == null || "-".equals(s.tipo)) {
                 errorSemantico("variable '" + lexema + "' no declarada");
             }
             regla(34); 
@@ -637,7 +640,7 @@ public class AnalizadorSintactico {
             String lexema = getLexema(tId);
             match("cod_id");
             TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
-            if(s==null) errorSemantico("variable en for no declarada");
+            if(s==null || "-".equals(s.tipo)) errorSemantico("variable en for no declarada");
             
             String op = "";
             if (es("cod_asig")) {
@@ -701,7 +704,7 @@ public class AnalizadorSintactico {
             String lexema = getLexema(tId);
             match("cod_id");
             TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
-            if(s==null) errorSemantico("variable en incr for no declarada");
+            if(s==null || "-".equals(s.tipo)) errorSemantico("variable en incr for no declarada");
             
             String op = "";
             if (es("cod_asig")) {
@@ -751,7 +754,7 @@ public class AnalizadorSintactico {
         match("cod_id");
         
         TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
-        if(s==null) errorSemantico("Variable no declarada en read");
+        if(s==null || "-".equals(s.tipo)) errorSemantico("Variable no declarada en read");
         else if("boolean".equals(s.tipo)) errorSemantico("No se puede hacer read de boolean");
         
         match("cod_pc");
@@ -912,15 +915,15 @@ public class AnalizadorSintactico {
             AO();
             match("cod_parDer");
             TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
-            if (s == null) {
+            if (s == null || "-".equals(s.tipo)) {
                 errorSemantico("funcion '" + lexema + "' no declarada");
                 return "error";
             }
-            return s.tipo; 
+            return s.tipoRetorno != null ? s.tipoRetorno : s.tipo;
         } else {
             regla(66);
             TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
-            if (s == null) {
+            if (s == null || "-".equals(s.tipo)) {
                 errorSemantico("variable '" + lexema + "' no declarada");
                 return "error";
             }
