@@ -1,21 +1,6 @@
-// entrada/salida y expresiones
-// read, write, expresiones aritmeticas y relacionales
-
-let int a;
-let int b;
-let int c;
-
-read a;
-read(b);
-
-c = a + b;
-write(c);
-
-c = (a + b) + 10;
-write c;
-
-if (a == b)
-    write("Son iguales");
-
-if (c == 0)
-    ;
+// Prueba bucle for
+let int sum = 0;
+for (let int i = 0; i == 10; i = i + 1) {
+    sum = sum + i;
+}
+write(sum);
