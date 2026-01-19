@@ -39,3 +39,6 @@ errores.txt
 parse.txt
 errores.txt
 
+# Delivery artifacts
+Entrega_PDL/
+prepare_delivery.ps1
