@@ -10,7 +10,7 @@ Compilador para el lenguaje MyJS desarrollado para la asignatura de Procesadores
 
 *Ejemplo:*
 ```bash
-java -jar target/myjs-ts-demo.jar ok1.js tokens.txt tabla_simbolos.txt
+java -jar target\myjs-ts-demo-1.0.0.jar ok1.js tokens.txt tabla_simbolos.txt
 ```
 
 ## Salida
