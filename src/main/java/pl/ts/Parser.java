@@ -196,6 +196,10 @@ public class Parser {
         return es("PR_int") || es("PR_float") || es("PR_boolean") || es("PR_string");
     }
 
+    private boolean esNumerico(String t) {
+        return "entero".equals(t) || "real".equals(t);
+    }
+
     private boolean esInicioSentencia() {
         return es("cod_id") || es("PR_for") || es("PR_if") || es("PR_read")
                 || es("PR_write") || es("PR_return") || es("cod_LLizq")
@@ -404,7 +408,14 @@ public class Parser {
             }
         }
 
-        B(); // cuerpo de la funcion { ... }
+
+
+        String tipoEncontrado = B(); // cuerpo de la funcion { ... }
+        
+        // miramos si lo que devuelve el cuerpo coincide con lo que pide la funcion
+        if (!tipoEncontrado.equals(retType)) {
+             errorSemantico("Retorno no esperado");
+        }
         
         // Salimos del ambito y recuperamos el desplazamiento de antes
         desp = oldDesp;
@@ -481,55 +492,69 @@ public class Parser {
     }
 
     // Bloque entre llaves { ... }
-    private void B() throws IOException {
+    private String B() throws IOException {
         regla(23);
         match("cod_LLizq");
-        LS();
+        String t = LS();
         match("cod_LLder");
+        return t;
     }
 
     // Lista de sentencias dentro de un bloque
-    private void LS() throws IOException {
+    private String LS() throws IOException {
         if (esInicioSentencia()) {
             regla(24);
-            S();
-            LS();
+            String tipoS = S();
+            String tipoLS = LS();
+            // si la sentencia S devuelve algo (no void), nos quedamos con eso
+            if (!"void".equals(tipoS)) return tipoS;
+            // si no, lo que diga el resto de la lista
+            return tipoLS;
         } else if (es("cod_LLder")) {
             regla(25); // final del bloque
+            return "void";
         } else {
             error("se esperaba una sentencia o '}' para cerrar el bloque");
+            return "void";
         }
     }
 
     // Una sentencia cualquiera
-    private void S() throws IOException {
+    private String S() throws IOException {
         if (es("cod_id")) {
             regla(26);
             SA();
+            return "void";
         } else if (es("PR_for")) {
             regla(27);
             SF();
+            return "void";
         } else if (es("PR_if")) {
             regla(28);
             SI();
+            return "void";
         } else if (es("PR_read")) {
             regla(29);
             SR();
+            return "void";
         } else if (es("PR_write")) {
             regla(30);
             SW();
+            return "void";
         } else if (es("PR_return")) {
             regla(31);
-            ST();
+            return ST();
         } else if (es("cod_LLizq")) {
             regla(32);
-            B();
+            return B();
         } else if (es("cod_pc")) {
             regla(33);
             match("cod_pc");
+            return "void";
         } else {
             error("sentencia no valida: se esperaba identificador, if, for, read, write, return, '{' o ';'");
             avanzar();
+            return "void";
         }
     }
 
@@ -600,7 +625,7 @@ public class Parser {
         F2(); // paso/incremento
         
         match("cod_parDer");
-        B(); // cuerpo del for
+        S(); // cuerpo del for (segun gramatica es S, no B, pero puede ser Bloque)
     }
 
     // Inicializacion del for
@@ -762,22 +787,25 @@ public class Parser {
     }
 
     // Sentencia return X
-    private void ST() throws IOException {
+    private String ST() throws IOException {
         regla(48);
         match("PR_return");
-        X0();
+        String tipo = X0();
         match("cod_pc");
+        return tipo;
     }
 
     // Expresion opcional de retorno
-    private void X0() throws IOException {
+    private String X0() throws IOException {
         if (esInicioExpr()) {
             regla(49);
-            X();
+            return X();
         } else if (es("cod_pc")) {
             regla(50); // return vacio
+            return "void";
         } else {
             error("return incorrecto, se esperaba una expresion o ';'");
+            return "error";
         }
     }
 
@@ -801,8 +829,9 @@ public class Parser {
             match("cod_rel");
             String t2 = X2();
             if (!"error".equals(inh) && !"error".equals(t2)) {
-                 if (!inh.equals(t2)) {
-                     errorSemantico("tipos incompatibles en comparacion: " + inh + " == " + t2);
+                 // la regla dice que ambos tienen que ser numericos
+                 if (!esNumerico(inh) || !esNumerico(t2)) {
+                     errorSemantico("== requiere numéricos");
                  }
             }
             return X12("boolean");
