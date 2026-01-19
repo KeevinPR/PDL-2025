@@ -547,10 +547,11 @@ public class AnalizadorSintactico {
             regla(32);
             return B();
         } else if (es("cod_pc")) {
-            regla(33);
+            regla(34);
             match("cod_pc");
             return "void";
         } else if (es("PR_let")) {
+            regla(33);
             D();
             return "void";
         } else {
@@ -562,7 +563,7 @@ public class AnalizadorSintactico {
 
     // Sentencia de asignacion o llamada a funcion
     private void SA() throws IOException {
-        regla(34);
+        regla(35);
         Token tId = actual;
         String lexema = getLexema(tId);
         match("cod_id");
@@ -582,15 +583,15 @@ public class AnalizadorSintactico {
             if (s == null || "-".equals(s.tipo)) {
                 errorSemantico("variable '" + lexema + "' no declarada");
             }
-            regla(34); 
+            // regla(35); // Eliminado: duplicado
             
             String op = "";
             if (es("cod_asig")) {
-                regla(35);
+                regla(36);
                 match("cod_asig");
                 op = "=";
             } else if (es("cod_asigRes")) {
-                regla(36);
+                regla(37);
                 match("cod_asigRes");
                 op = "%=";
             } else {
@@ -616,7 +617,7 @@ public class AnalizadorSintactico {
 
     // Bucle for (F0 ; F1 ; F2) S
     private void SF() throws IOException {
-        regla(37);
+        regla(38);
         match("PR_for");
         match("cod_parIzq");
         
@@ -634,7 +635,7 @@ public class AnalizadorSintactico {
     private void F0() throws IOException {
         if (es("cod_id")) {
              // id = X
-            regla(38);
+            regla(39);
             Token tId = actual;
             String lexema = getLexema(tId);
             match("cod_id");
@@ -643,11 +644,11 @@ public class AnalizadorSintactico {
             
             String op = "";
             if (es("cod_asig")) {
-                regla(35);
+                regla(36);
                 match("cod_asig");
                 op = "=";
             } else if (es("cod_asigRes")) {
-                regla(36);
+                regla(37);
                 match("cod_asigRes");
                 op = "%=";
             } else {
@@ -660,7 +661,7 @@ public class AnalizadorSintactico {
             }
         } else if (es("PR_let")) {
             // let T id = X
-            regla(39);
+            regla(40);
             match("PR_let");
             zonaDeclaracion = true;
             String tipo = T();
@@ -676,7 +677,7 @@ public class AnalizadorSintactico {
             
             D1(tipo);
         } else if (es("cod_pc")) {
-            regla(40); // parte vacia
+            regla(41); // parte vacia
         } else {
             error("inicializacion del for: se esperaba asignacion, 'let' o nada");
         }
@@ -685,11 +686,11 @@ public class AnalizadorSintactico {
     // Condicion del for
     private void F1() throws IOException {
         if (esInicioExpr()) {
-            regla(41);
+            regla(42);
             String t = X();
             if(!"error".equals(t) && !"boolean".equals(t)) errorSemantico("condicion for debe ser boolean");
         } else if (es("cod_pc")) {
-            regla(42); // sin condicion
+            regla(43); // sin condicion
         } else {
             error("condicion del for: se esperaba una expresion o nada");
         }
@@ -698,7 +699,7 @@ public class AnalizadorSintactico {
     // Incremento del for
     private void F2() throws IOException {
         if (es("cod_id")) {
-            regla(43);
+            regla(44);
             Token tId = actual;
             String lexema = getLexema(tId);
             match("cod_id");
@@ -707,11 +708,11 @@ public class AnalizadorSintactico {
             
             String op = "";
             if (es("cod_asig")) {
-                regla(35);
+                regla(36);
                 match("cod_asig");
                 op = "=";
             } else if (es("cod_asigRes")) {
-                regla(36);
+                regla(37);
                 match("cod_asigRes");
                 op = "%=";
             } else {
@@ -724,7 +725,7 @@ public class AnalizadorSintactico {
                if("%=".equals(op) && (!"entero".equals(s.tipo) || !"entero".equals(tX))) errorSemantico("%= requiere enteros");
             }
         } else if (es("cod_parDer")) {
-            regla(44); // sin incremento
+            regla(45); // sin incremento
         } else {
             error("incremento del for: se esperaba asignacion o nada");
         }
@@ -732,7 +733,7 @@ public class AnalizadorSintactico {
 
     // Sentencia if (X) S
     private void SI() throws IOException {
-        regla(45);
+        regla(46);
         match("PR_if");
         match("cod_parIzq");
         String t = X();
@@ -745,7 +746,7 @@ public class AnalizadorSintactico {
 
     // Sentencia read id ; (sin parentesis)
     private void SR() throws IOException {
-        regla(46);
+        regla(47);
         match("PR_read");
         
         Token tId = actual;
@@ -761,7 +762,7 @@ public class AnalizadorSintactico {
 
     // Sentencia write X ; (sin parentesis)
     private void SW() throws IOException {
-        regla(47);
+        regla(48);
         match("PR_write");
         
         String t = X(); // expresion a escribir
@@ -773,7 +774,7 @@ public class AnalizadorSintactico {
 
     // Sentencia return X
     private String ST() throws IOException {
-        regla(48);
+        regla(49);
         match("PR_return");
         String tipo = X0();
         match("cod_pc");
@@ -783,10 +784,10 @@ public class AnalizadorSintactico {
     // Expresion opcional de retorno
     private String X0() throws IOException {
         if (esInicioExpr()) {
-            regla(49);
+            regla(50);
             return X();
         } else if (es("cod_pc")) {
-            regla(50); // return vacio
+            regla(51); // return vacio
             return "void";
         } else {
             error("return incorrecto, se esperaba una expresion o ';'");
@@ -796,13 +797,13 @@ public class AnalizadorSintactico {
 
     // Una expresion (la mas general)
     private String X() throws IOException {
-        regla(51);
+        regla(52);
         return X1();
     }
 
     // Nivel 1: Igualdades (==)
     private String X1() throws IOException {
-        regla(52);
+        regla(53);
         String t = X2();
         return X12(t);
     }
@@ -810,7 +811,7 @@ public class AnalizadorSintactico {
     // Parte derecha de la igualdad
     private String X12(String inh) throws IOException {
         if (es("cod_rel")) { // ==
-            regla(53);
+            regla(54);
             match("cod_rel");
             String t2 = X2();
             if (!"error".equals(inh) && !"error".equals(t2)) {
@@ -821,14 +822,14 @@ public class AnalizadorSintactico {
             }
             return X12("boolean");
         } else {
-            regla(54);
+            regla(55);
             return inh;
         }
     }
 
     // Nivel 2: Sumas (+)
     private String X2() throws IOException {
-        regla(55);
+        regla(56);
         String t = X3();
         return X22(t);
     }
@@ -836,7 +837,7 @@ public class AnalizadorSintactico {
     // Parte derecha de la suma
     private String X22(String inh) throws IOException {
         if (es("cod_sum")) {
-            regla(56);
+            regla(57);
             match("cod_sum");
             String t2 = X3();
             if (!"error".equals(inh) && !"error".equals(t2)) {
@@ -850,7 +851,7 @@ public class AnalizadorSintactico {
             }
             return X22(inh);
         } else {
-            regla(57);
+            regla(58);
             return inh;
         }
     }
@@ -858,7 +859,7 @@ public class AnalizadorSintactico {
     // Nivel 3: Negacion logica (!)
     private String X3() throws IOException {
         if (es("cod_log")) {
-            regla(58);
+            regla(59);
             match("cod_log");
             String t = X3();
             if (!"error".equals(t) && !"boolean".equals(t)) {
@@ -866,7 +867,7 @@ public class AnalizadorSintactico {
             }
             return "boolean";
         } else if (esInicioPrimario()) {
-            regla(59);
+            regla(60);
             return V();
         } else {
             error("se esperaba una expresion (identificador, numero, cadena o '(')");
@@ -877,24 +878,24 @@ public class AnalizadorSintactico {
     // Valores básicos (id, numero, cadena, parentesis)
     private String V() throws IOException {
         if (es("cod_id")) {
-            regla(60);
+            regla(61);
             Token tId = actual;
             match("cod_id");
             return V2(tId);
         } else if (es("cod_ce")) {
-            regla(61);
+            regla(62);
             match("cod_ce");
             return "entero";
         } else if (es("cod_cr")) {
-            regla(62);
+            regla(63);
             match("cod_cr");
             return "real";
         } else if (es("cod_cad")) {
-            regla(63);
+            regla(64);
             match("cod_cad");
             return "cadena";
         } else if (es("cod_parIzq")) {
-            regla(64);
+            regla(65);
             match("cod_parIzq");
             String t = X();
             match("cod_parDer");
@@ -909,7 +910,7 @@ public class AnalizadorSintactico {
     private String V2(Token tId) throws IOException {
         String lexema = getLexema(tId);
         if (es("cod_parIzq")) {
-            regla(65);
+            regla(66);
             match("cod_parIzq");
             AO();
             match("cod_parDer");
@@ -920,7 +921,7 @@ public class AnalizadorSintactico {
             }
             return s.tipoRetorno != null ? s.tipoRetorno : s.tipo;
         } else {
-            regla(66);
+            regla(67);
             TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
             if (s == null || "-".equals(s.tipo)) {
                 errorSemantico("variable '" + lexema + "' no declarada");
@@ -933,10 +934,10 @@ public class AnalizadorSintactico {
     // Argumentos opcionales de una funcion
     private void AO() throws IOException {
         if (esInicioExpr()) {
-            regla(67);
+            regla(68);
             AL();
         } else if (es("cod_parDer")) {
-            regla(68); // sin argumentos
+            regla(69); // sin argumentos
         } else {
             error("argumento incorrecto en llamada a funcion");
         }
@@ -944,7 +945,7 @@ public class AnalizadorSintactico {
 
     // Lista de argumentos
     private void AL() throws IOException {
-        regla(69);
+        regla(70);
         X();
         AL2();
     }
@@ -952,12 +953,12 @@ public class AnalizadorSintactico {
     // Mas argumentos separados por coma
     private void AL2() throws IOException {
         if (es("cod_coma")) {
-            regla(70);
+            regla(71);
             match("cod_coma");
             X();
             AL2();
         } else if (es("cod_parDer")) {
-            regla(71); // final de la lista
+            regla(72); // final de la lista
         } else {
             error("se esperaba ',' o ')' en los argumentos");
         }
