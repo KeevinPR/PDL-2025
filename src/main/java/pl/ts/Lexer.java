@@ -4,20 +4,18 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+// El Lexer se encarga de trocear el codigo en tokens
 public class Lexer {
 
     private String codigo;
-    private int pos;                 // posición actual en el String
-    private int linea;               // número de línea para mensajes
-    private BufferedWriter tokOut;   // salida de tokens
-    private List<String> errores;    // lista de errores léxicos
-
-    // lista de tokens para el sintáctico
-    private List<Token> listaTokens;
-
+    private int pos;                 // por donde vamos leyendo el string
+    private int linea;               // para saber en que linea estamos si hay error
+    private BufferedWriter tokOut;   // donde escribimos los tokens
+    private List<String> errores;    // para ir guardando los errores que salgan
+    private List<Token> listaTokens; // lista para pasarle luego al parser
     private String rutaErrores;
     
-    // para no repetir muchos errores en la misma linea
+    // para no poner mil errores si en una linea todo esta mal
     private int lineaUltimoErrorLexico = -1;
     private int contadorErrores = 0;
 
@@ -25,14 +23,13 @@ public class Lexer {
         this.codigo = leerArchivo(rutaFuente);
         this.pos = 0;
         this.linea = 1;
-        // he puesto false para sobrescribir siempre el fichero de tokens, cambiar a true si queremos añadir al final
         this.tokOut = new BufferedWriter(new FileWriter(rutaTokens, false));
         this.errores = new ArrayList<String>();
         this.listaTokens = new ArrayList<Token>();
         this.rutaErrores = rutaErrores;
     }
 
-    // funcion principal del lexico
+    // El metodo principal que recorre todo el fichero
     public void analizar() throws IOException {
         char c;
 
@@ -40,47 +37,47 @@ public class Lexer {
             c = siguienteCaracter();
 
             if (c == '\0') {
-                // fin de fichero
+                // fin del archivo, metemos el token de EOF
                 escribirToken("cod_eof", null);
                 break;
             }
 
-            // blancos
+            // ignoramos espacios, tabuladores y retornos de carro
             if (c == ' ' || c == '\t' || c == '\r') {
                 continue;
             }
 
-            // salto de línea
+            // si es un salto de linea, sumamos 1 al contador
             if (c == '\n') {
                 linea++;
                 continue;
             }
 
-            // números
+            // si es un numero, vamos a leerlo entero
             if (esDigito(c)) {
                 retroceder();
                 leerNumero();
                 continue;
             }
 
-            // identificadores o palabras reservadas
+            // si empieza por letra o _, puede ser id o palabra reservada
             if (esLetra(c) || c == '_') {
                 retroceder();
                 leerIdentificador();
                 continue;
             }
 
-            // cadenas con comillas dobles
+            // si empieza por comillas, es una cadena
             if (c == '"') {
                 leerCadena();
                 continue;
             }
 
-            // comentarios de línea //
+            // comentarios que empiezan por // (solo de una linea)
             if (c == '/') {
                 char sig = mirarSiguiente();
                 if (sig == '/') {
-                    siguienteCaracter();
+                    siguienteCaracter(); // saltamos el segundo /
                     saltarComentario();
                 } else {
                     registrarError("caracter '/' no permitido (solo comentarios //)");
@@ -89,7 +86,7 @@ public class Lexer {
             }
             
 
-            // operadores y separadores simples
+            // Simbolos simples
             if (c == '+') {
                 escribirToken("cod_sum", null);
                 continue;
@@ -130,7 +127,7 @@ public class Lexer {
                 continue;
             }
 
-            // =, ==, %=
+            // comprobamos si es = o ==
             if (c == '=') {
                 char sig = mirarSiguiente();
                 if (sig == '=') {
@@ -142,6 +139,7 @@ public class Lexer {
                 continue;
             }
 
+            // comprobamos si es %=
             if (c == '%') {
                 char sig = mirarSiguiente();
                 if (sig == '=') {
@@ -153,33 +151,32 @@ public class Lexer {
                 continue;
             }
 
-            // cualquier otro carácter es error
+            // si llegamos aqui es que no sabemos que es
             registrarError("caracter no reconocido: '" + c + "'");
         }
 
         tokOut.close();
 
-        // Guardar errores en fichero (siempre se reinicia el fichero)
+        // Al final, guardamos todos los errores en su fichero
         BufferedWriter errOut = new BufferedWriter(new FileWriter(rutaErrores, false));
         for (String e : errores) {
-            // e ya tiene el número de línea
             errOut.write(e);
             errOut.newLine();
         }
         errOut.close();
     }
 
-    // Devuelve la lista de tokens al sintáctico
+    // para que el parser pueda pedirnos los tokens mas tarde
     public List<Token> getTokens() {
         return listaTokens;
     }
 
-    // numeros enteros y reales
+    // funcion para leer numeros (pueden ser 123 o 12.34)
     private void leerNumero() throws IOException {
         StringBuilder sb = new StringBuilder();
         char c = siguienteCaracter();
 
-        // parte entera
+        // parte de delante del punto
         while (esDigito(c)) {
             sb.append(c);
             c = siguienteCaracter();
@@ -187,13 +184,13 @@ public class Lexer {
 
         boolean esReal = false;
 
-        // parte decimal
+        // si hay un punto, miramos si vienen mas numeros
         if (c == '.') {
             char despuesPunto = mirarSiguiente();
             if (esDigito(despuesPunto)) {
                 esReal = true;
-                sb.append(c); // el punto
-                c = siguienteCaracter(); // primer dígito después del punto
+                sb.append(c); 
+                c = siguienteCaracter(); 
                 while (esDigito(c)) {
                     sb.append(c);
                     c = siguienteCaracter();
@@ -203,7 +200,7 @@ public class Lexer {
             }
         }
 
-        // nos hemos pasado un carácter
+        // volvemos un paso atras para no comernos el siguiente token
         retroceder();
 
         String lexema = sb.toString();
@@ -222,6 +219,7 @@ public class Lexer {
         } else {
             try {
                 double valor = Double.parseDouble(lexema);
+                // limite que nos han puesto en el PDF
                 if (valor < 117549436.0) {
                     escribirToken("cod_cr", lexema);
                 } else {
@@ -233,7 +231,7 @@ public class Lexer {
         }
     }
 
-    // identificadores y palabras reservadas
+    // para leer variables o palabras como function, let...
     private void leerIdentificador() throws IOException {
         StringBuilder sb = new StringBuilder();
         char c = siguienteCaracter();
@@ -248,15 +246,17 @@ public class Lexer {
         String lexema = sb.toString();
         String codigoPR = codigoReservada(lexema);
 
+        // si es palabra reservada mandamos su codigo, si no, es un ID normal
         if (codigoPR != null) {
             escribirToken(codigoPR, null);
         } else {
+            // si es un ID, lo metemos en la tabla de simbolos
             int handle = TSApi.ensureId(lexema, linea);
             escribirToken("cod_id", String.valueOf(handle));
         }
     }
 
-    // cadenas con comillas dobles
+    // lee cadenas que van entre " "
     private void leerCadena() throws IOException {
         StringBuilder sb = new StringBuilder();
         int longitud = 0;
@@ -282,6 +282,7 @@ public class Lexer {
         if (!cerrada) {
             registrarError("cadena no cerrada");
         } else {
+            // maximo 64 caracteres
             if (longitud < 64) {
                 String lexema = sb.toString();
                 escribirToken("cod_cad", "\"" + lexema + "\"");
@@ -291,6 +292,7 @@ public class Lexer {
         }
     }
 
+    // se salta lo que hay detras de // hasta el final de linea
     private void saltarComentario() {
         char c = siguienteCaracter();
         while (c != '\n' && c != '\0') {
@@ -301,7 +303,7 @@ public class Lexer {
         }
     }
 
-    // escribir token al fichero
+    // para escribir el token tanto en el fichero como en la lista de memoria
     private void escribirToken(String codigo, String atributo) throws IOException {
         String attr = (atributo == null) ? "" : atributo;
 
@@ -312,10 +314,10 @@ public class Lexer {
         }
         tokOut.newLine();
 
-        // guardar en memoria para el sintactico
         listaTokens.add(new Token(codigo, attr, linea));
     }
 
+    // lee todo el fichero JS de golpe a un String
     private String leerArchivo(String ruta) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(ruta));
         StringBuilder sb = new StringBuilder();
@@ -358,7 +360,7 @@ public class Lexer {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
-    // comprobar si es palabra reservada
+    // mapeo de palabras reservadas a sus codigos
     private String codigoReservada(String lexema) {
         if (lexema.equals("let")) return "PR_let";
         if (lexema.equals("function")) return "PR_function";
@@ -375,9 +377,8 @@ public class Lexer {
         return null;
     }
 
-    // guardar error
+    // guarda el error y controla que no salgan demasiados seguidos
     private void registrarError(String mensaje) {
-        // evitar demasiados errores en la misma linea
         if (linea == lineaUltimoErrorLexico) {
             contadorErrores++;
             if (contadorErrores > 2) {

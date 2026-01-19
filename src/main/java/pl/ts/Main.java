@@ -2,35 +2,40 @@ package pl.ts;
 
 import java.util.List;
 
+// Clase principal que arranca el compilador
 public class Main {
 
     public static void main(String[] args) {
+        // Miramos que nos pasen los 3 archivos obligatorios
         if (args.length != 3) {
             System.err.println("Uso: java -cp target/classes pl.ts.Main fichero.js tokens.txt tabla_simbolos.txt");
             return;
         }
 
+        // Nombres de los ficheros que nos dan por argumentos
         String archivoFuente = args[0];
         String archivoTokens = args[1];
         String archivoTS     = args[2];
 
+        // Estos son fijos segun nos han pedido
         String archivoParse  = "parse.txt";
         String archivoErrores = "errores.txt";
 
         try {
-            // Tabla de símbolos
+            // Inicializar la tabla de simbolos
             TSApi.start(archivoTS);
-
-            // Analizador léxico
+            
+            // Primero el Lexer para sacar los tokens
             Lexer lexer = new Lexer(archivoFuente, archivoTokens, archivoErrores);
             lexer.analizar();
 
-            TSApi.finish();
-
-            // Analizador sintáctico
+            // Despues el Parser usando la lista de tokens del lexer
             List<Token> listaTokens = lexer.getTokens();
             Parser parser = new Parser(listaTokens, archivoParse, archivoErrores);
             parser.analizar();
+
+            // Cerramos todo
+            TSApi.finish();
 
             System.out.println("Analisis completado.");
             System.out.println("Tokens en: " + archivoTokens);
