@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // El Lexer se encarga de trocear el codigo en tokens
-public class Lexer {
+public class AnalizadorLexico {
 
     private String codigo;
     private int pos;                 // por donde vamos leyendo el string
@@ -19,7 +19,7 @@ public class Lexer {
     private int lineaUltimoErrorLexico = -1;
     private int contadorErrores = 0;
 
-    public Lexer(String rutaFuente, String rutaTokens, String rutaErrores) throws IOException {
+    public AnalizadorLexico(String rutaFuente, String rutaTokens, String rutaErrores) throws IOException {
         this.codigo = leerArchivo(rutaFuente);
         this.pos = 0;
         this.linea = 1;
@@ -251,7 +251,7 @@ public class Lexer {
             escribirToken(codigoPR, null);
         } else {
             // si es un ID, lo metemos en la tabla de simbolos
-            int handle = TSApi.ensureId(lexema, linea);
+            int handle = TablaSimbolos.gestionarId(lexema);
             escribirToken("cod_id", String.valueOf(handle));
         }
     }

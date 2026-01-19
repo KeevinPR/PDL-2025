@@ -5,7 +5,7 @@ import java.util.List;
 
 // El Analizador Sintactico (Parser)
 // Usamos el metodo descendente LL(1)
-public class Parser {
+public class AnalizadorSintactico {
 
     private List<Token> tokens;
     private int pos;
@@ -23,7 +23,7 @@ public class Parser {
     private int desp = 0;
     private boolean zonaDeclaracion = false;
 
-    public Parser(List<Token> tokens, String rutaParse, String rutaErrores) throws IOException {
+    public AnalizadorSintactico(List<Token> tokens, String rutaParse, String rutaErrores) throws IOException {
         this.tokens = tokens;
         this.pos = 0;
         if (tokens.size() > 0) {
@@ -73,7 +73,7 @@ public class Parser {
         if (t == null) return "";
         try {
             int h = Integer.parseInt(t.atributo);
-            SymbolTableManager.Symbol s = TSApi.getSymbol(h);
+            TablaSimbolos.Simbolo s = TablaSimbolos.getSimbolo(h);
             return s.lexema;
         } catch (Exception e) {
             return "";
@@ -306,8 +306,8 @@ public class Parser {
 
         // Metemos la variable en la tabla de simbolos
         if (!lexema.isEmpty()) {
-            int handle = TSApi.ensureId(lexema, -1);
-            SymbolTableManager.Symbol s = TSApi.getSymbol(handle);
+            int handle = TablaSimbolos.gestionarId(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.getSimbolo(handle);
             if (s != null) {
                 // si el tipo no es -, es que ya estaba declarada antes
                 if (!"-".equals(s.tipo)) {
@@ -377,10 +377,10 @@ public class Parser {
         match("cod_id");
         
         // Guardamos la funcion en la tabla global (actualmente estamos en global)
-        SymbolTableManager.Symbol funcion = null;
+        TablaSimbolos.Simbolo funcion = null;
         if (!lexema.isEmpty()) {
-            int h = TSApi.ensureId(lexema, -1);
-            funcion = TSApi.getSymbol(h);
+            int h = TablaSimbolos.gestionarId(lexema);
+            funcion = TablaSimbolos.getSimbolo(h);
             if(funcion != null) {
                 funcion.tipo = retType;
                 funcion.tipoRetorno = retType;
@@ -388,7 +388,7 @@ public class Parser {
         }
         
         // Entramos en el nuevo ambito de la funcion
-        TSApi.enterScope(lexema);
+        TablaSimbolos.entrarBloque(lexema);
         int oldDesp = desp;
         desp = 0; // el desplazamiento local empieza en 0
         
@@ -398,7 +398,7 @@ public class Parser {
 
         // Rellenamos los datos de la funcion con sus parametros
         if (funcion != null) {
-            SymbolTableManager.SymbolTable tablaLocal = pl.ts.TSApi.getManager().getTablaActual();
+            TablaSimbolos.Tabla tablaLocal = TablaSimbolos.getTablaActual();
             funcion.numParams = tablaLocal.simbolos.size();
             for(int i=0; i<funcion.numParams; i++) {
                 if (i < 10) { 
@@ -419,7 +419,7 @@ public class Parser {
         
         // Salimos del ambito y recuperamos el desplazamiento de antes
         desp = oldDesp;
-        TSApi.exitScope();
+        TablaSimbolos.salirBloque();
     }
 
     // Tipo de retorno de funcion (incluye void)
@@ -480,12 +480,12 @@ public class Parser {
         
         // El parametro va a la tabla de simbolos local
         if(!lexema.isEmpty()) {
-            int h = TSApi.ensureId(lexema, -1);
-            SymbolTableManager.Symbol s = TSApi.getSymbol(h);
+            int h = TablaSimbolos.gestionarId(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.getSimbolo(h);
             if(s!=null) {
                 s.tipo = tipo;
                 s.desp = desp; 
-                s.param = 1; // marcamos que es un parametro
+                s.esParametro = 1; // marcamos que es un parametro
                 desp += getAncho(tipo); 
             }
         }
@@ -567,7 +567,7 @@ public class Parser {
         
         if (es("cod_parIzq")) {
             // Es una llamada a funcion
-            SymbolTableManager.Symbol s = TSApi.buscar(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
             if (s == null) {
                 errorSemantico("funcion '" + lexema + "' no declarada");
             }
@@ -576,7 +576,7 @@ public class Parser {
             match("cod_parDer");
         } else {
             // Es una asignacion simple: variable = ... o variable %= ...
-            SymbolTableManager.Symbol s = TSApi.buscar(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
             if (s == null) {
                 errorSemantico("variable '" + lexema + "' no declarada");
             }
@@ -636,7 +636,7 @@ public class Parser {
             Token tId = actual;
             String lexema = getLexema(tId);
             match("cod_id");
-            SymbolTableManager.Symbol s = TSApi.buscar(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
             if(s==null) errorSemantico("variable en for no declarada");
             
             String op = "";
@@ -666,8 +666,8 @@ public class Parser {
             String lexema = getLexema(tId);
             match("cod_id");
             if(!lexema.isEmpty()) {
-                int h = TSApi.ensureId(lexema,-1);
-                SymbolTableManager.Symbol s = TSApi.getSymbol(h);
+                int h = TablaSimbolos.gestionarId(lexema);
+                TablaSimbolos.Simbolo s = TablaSimbolos.getSimbolo(h);
                 if(s!=null) { s.tipo=tipo; s.desp=desp; desp+=getAncho(tipo); }
             }
             zonaDeclaracion = false;
@@ -700,7 +700,7 @@ public class Parser {
             Token tId = actual;
             String lexema = getLexema(tId);
             match("cod_id");
-            SymbolTableManager.Symbol s = TSApi.buscar(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
             if(s==null) errorSemantico("variable en incr for no declarada");
             
             String op = "";
@@ -750,7 +750,7 @@ public class Parser {
         String lexema = getLexema(tId);
         match("cod_id");
         
-        SymbolTableManager.Symbol s = TSApi.buscar(lexema);
+        TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
         if(s==null) errorSemantico("Variable no declarada en read");
         else if("boolean".equals(s.tipo)) errorSemantico("No se puede hacer read de boolean");
         
@@ -911,7 +911,7 @@ public class Parser {
             match("cod_parIzq");
             AO();
             match("cod_parDer");
-            SymbolTableManager.Symbol s = TSApi.buscar(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
             if (s == null) {
                 errorSemantico("funcion '" + lexema + "' no declarada");
                 return "error";
@@ -919,7 +919,7 @@ public class Parser {
             return s.tipo; 
         } else {
             regla(66);
-            SymbolTableManager.Symbol s = TSApi.buscar(lexema);
+            TablaSimbolos.Simbolo s = TablaSimbolos.buscar(lexema);
             if (s == null) {
                 errorSemantico("variable '" + lexema + "' no declarada");
                 return "error";

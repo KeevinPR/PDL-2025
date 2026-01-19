@@ -23,19 +23,19 @@ public class Main {
 
         try {
             // Inicializar la tabla de simbolos
-            TSApi.start(archivoTS);
+            TablaSimbolos.inicializar(archivoTS);
             
             // Primero el Lexer para sacar los tokens
-            Lexer lexer = new Lexer(archivoFuente, archivoTokens, archivoErrores);
+            AnalizadorLexico lexer = new AnalizadorLexico(archivoFuente, archivoTokens, archivoErrores);
             lexer.analizar();
 
             // Despues el Parser usando la lista de tokens del lexer
             List<Token> listaTokens = lexer.getTokens();
-            Parser parser = new Parser(listaTokens, archivoParse, archivoErrores);
+            AnalizadorSintactico parser = new AnalizadorSintactico(listaTokens, archivoParse, archivoErrores);
             parser.analizar();
 
             // Cerramos todo
-            TSApi.finish();
+            TablaSimbolos.finalizar();
 
             System.out.println("Analisis completado.");
             System.out.println("Tokens en: " + archivoTokens);
