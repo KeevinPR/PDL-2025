@@ -625,7 +625,7 @@ public class Parser {
         F2(); // paso/incremento
         
         match("cod_parDer");
-        S(); // cuerpo del for (segun gramatica es S, no B, pero puede ser Bloque)
+        B(); // cuerpo del for (tiene que ser un bloque entre llaves)
     }
 
     // Inicializacion del for
@@ -741,23 +741,14 @@ public class Parser {
         S();
     }
 
-    // Sentencia read(id)
+    // Sentencia read id ; (sin parentesis)
     private void SR() throws IOException {
         regla(46);
         match("PR_read");
-        String lexema = "";
-        Token tId = null;
-        if (es("cod_parIzq")) {
-            match("cod_parIzq");
-            tId = actual;
-            lexema = getLexema(tId);
-            match("cod_id");
-            match("cod_parDer");
-        } else {
-            tId = actual;
-            lexema = getLexema(tId);
-            match("cod_id");
-        }
+        
+        Token tId = actual;
+        String lexema = getLexema(tId);
+        match("cod_id");
         
         SymbolTableManager.Symbol s = TSApi.buscar(lexema);
         if(s==null) errorSemantico("Variable no declarada en read");
@@ -766,20 +757,12 @@ public class Parser {
         match("cod_pc");
     }
 
-    // Sentencia write(X)
+    // Sentencia write X ; (sin parentesis)
     private void SW() throws IOException {
         regla(47);
         match("PR_write");
-        String t = "";
-        if (es("cod_parIzq")) {
-            match("cod_parIzq");
-            t = X();
-            match("cod_parDer");
-        } else if (es("cod_pc")) {
-            error("write debe ir seguido de una expresion");
-        } else {
-            t = X();
-        }
+        
+        String t = X(); // expresion a escribir
         
         if("boolean".equals(t)) errorSemantico("No se puede hacer write de boolean");
         

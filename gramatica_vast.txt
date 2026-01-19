@@ -38,7 +38,7 @@ S -> ;
 SA -> id OP X ;
 OP -> =
 OP -> %=
-SF -> for ( F0 ; F1 ; F2 ) S
+SF -> for ( F0 ; F1 ; F2 ) B
 F0 -> id OP X
 F0 -> let T id D1
 F0 -> lambda
@@ -47,8 +47,8 @@ F1 -> lambda
 F2 -> id OP X
 F2 -> lambda
 SI -> if ( X ) S
-SR -> read ( id ) ;
-SW -> write ( X ) ;
+SR -> read id ;
+SW -> write X ;
 ST -> return X0 ;
 X0 -> X
 X0 -> lambda
@@ -73,6 +73,4 @@ AO -> lambda
 AL -> X AL9
 AL9 -> , X AL9
 AL9 -> lambda
-SR -> read id ;
-SW -> write X ;
 }

@@ -5,5 +5,5 @@ let int c = 3;
 let boolean res = false;
 res = (a + b) == c;
 if (res) {
-    write("iguales");
+    write "iguales";
 }
