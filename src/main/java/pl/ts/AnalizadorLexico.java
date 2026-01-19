@@ -219,7 +219,7 @@ public class AnalizadorLexico {
         } else {
             try {
                 double valor = Double.parseDouble(lexema);
-                // limite que nos han puesto en el PDF
+                // limite que nos han puesto en la documentacion
                 if (valor < 117549436.0) {
                     escribirToken("cod_cr", lexema);
                 } else {

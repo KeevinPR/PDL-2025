@@ -217,7 +217,6 @@ public class AnalizadorSintactico {
     }
 
     // REGLAS DE LA GRAMATICA
-    // (Anotadas para saber cual es cual segu el documento de clase)
     // 1: P  -> G eof
     // 2: G  -> E G | 3: λ
     // 4: E  -> D | 5: F | 6: S
